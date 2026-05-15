@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jain AGM Diet Register Tool</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',Arial,sans-serif;background:#f0f4f8;color:#222;font-size:14px}
+header{background:linear-gradient(135deg,#1a5276,#2e86c1);color:#fff;padding:14px 20px}
+header h1{font-size:18px;font-weight:700}
+header p{font-size:12px;opacity:.85}
+nav{display:flex;gap:4px;background:#1a5276;padding:6px 16px;flex-wrap:wrap}
+nav button{background:none;border:none;color:#cde;padding:8px 16px;border-radius:6px 6px 0 0;cursor:pointer;font-size:13px;font-weight:600;transition:.2s}
+nav button.active{background:#fff;color:#1a5276}
+nav button:hover:not(.active){background:#2e86c1;color:#fff}
+.tab{display:none;padding:16px}
+.tab.active{display:block}
+.card{background:#fff;border-radius:10px;padding:16px;margin-bottom:16px;box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.card h3{color:#1a5276;font-size:14px;font-weight:700;margin-bottom:12px;border-bottom:2px solid #d6eaf8;padding-bottom:6px}
+label{display:block;font-size:12px;font-weight:600;color:#555;margin-bottom:3px}
+input,select{width:100%;padding:7px 10px;border:1px solid #ccc;border-radius:6px;font-size:13px;margin-bottom:10px;outline:none}
+input:focus,select:focus{border-color:#2e86c1}
+.btn{padding:8px 18px;border:none;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600;transition:.2s}
+.btn-primary{background:#1a5276;color:#fff}.btn-primary:hover{background:#154360}
+.btn-success{background:#1e8449;color:#fff}.btn-success:hover{background:#196f3d}
+.btn-danger{background:#c0392b;color:#fff}.btn-danger:hover{background:#a93226}
+.btn-info{background:#2e86c1;color:#fff}.btn-info:hover{background:#2874a6}
+.btn-warning{background:#d4ac0d;color:#fff}.btn-warning:hover{background:#b7950b}
+.btn-sm{padding:4px 10px;font-size:12px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{background:#1a5276;color:#fff;padding:8px 6px;text-align:left}
+td{padding:7px 6px;border-bottom:1px solid #eee;vertical-align:top}
+tr:hover td{background:#eaf4fb}
+.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600}
+.badge-k{background:#d5f5e3;color:#1e8449}
+.badge-s{background:#d6eaf8;color:#1a5276}
+.badge-sh{background:#fde8d8;color:#ca6f1e}
+.badge-p{background:#e8daef;color:#7d3c98}
+.badge-kb{background:#fef9e7;color:#b7950b}
+.badge-ps{background:#fde2e2;color:#c0392b}
+.meal-cell select,.meal-cell input{margin-bottom:4px;font-size:12px}
+.ward-section{margin-bottom:16px}
+.ward-header{background:#2e86c1;color:#fff;padding:8px 12px;border-radius:6px;font-weight:700;margin-bottom:6px;font-size:13px}
+.day-tabs{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:12px}
+.day-tab{padding:5px 12px;background:#d6eaf8;border:none;border-radius:5px;cursor:pointer;font-size:12px;font-weight:600;color:#1a5276}
+.day-tab.active{background:#1a5276;color:#fff}
+.flex{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap}
+.flex-end{display:flex;justify-content:flex-end;gap:8px;margin-top:10px}
+.stat-box{background:#1a5276;color:#fff;border-radius:8px;padding:14px;text-align:center}
+.stat-box .num{font-size:28px;font-weight:700}
+.stat-box .lbl{font-size:11px;opacity:.8;margin-top:2px}
+.highlight{background:#fffde7;border:1px solid #f9a825;border-radius:6px;padding:10px;margin-bottom:10px;font-size:12px}
+.date-range-block{margin-bottom:16px}
+.date-range-block .day-section{border:1px solid #d6eaf8;border-radius:8px;margin-bottom:16px;overflow:hidden}
+.date-range-block .day-section-header{background:#eaf4fb;padding:8px 14px;font-weight:700;color:#1a5276;font-size:13px}
+.upload-zone{border:3px dashed #2e86c1;border-radius:10px;padding:30px;text-align:center;cursor:pointer;background:#f0f8ff;margin-bottom:16px}
+.upload-zone:hover{background:#d6eaf8}
+.upload-zone input[type=file]{display:none}
+.upload-zone .icon{font-size:40px;margin-bottom:8px}
+.upload-zone p{color:#1a5276;font-weight:600}
+#pdfStatus{padding:10px;border-radius:6px;margin-bottom:10px;font-size:13px;font-weight:600;display:none}
+.status-info{background:#d6eaf8;color:#1a5276}
+.status-success{background:#d5f5e3;color:#1e8449}
+.status-error{background:#fde2e2;color:#c0392b}
+.import-preview{overflow-x:auto}
+.import-row-edit input,.import-row-edit select{margin-bottom:0;padding:4px 6px;font-size:12px}
+.ward-map-row{display:flex;align-items:center;gap:10px;margin-bottom:6px;font-size:13px}
+.ward-map-row select{width:220px;margin-bottom:0}
+.indent-table input{width:80px;padding:4px;font-size:12px}
+.custom-input{margin-top:4px}
+@media print{
+  body *{visibility:hidden}
+  .print-area,.print-area *{visibility:visible}
+  .print-area{display:block!important;position:fixed;top:0;left:0;width:100%;padding:20px}
+}
+.print-area{display:none}
+</style>
+</head>
+<body>
+<header>
+  <h1>🏥 Jain AGM Ayurvedic Medical College & Hospital</h1>
+  <p>Diet Register & Indent Management System — Varur, Karnataka</p>
+</header>
+<nav>
+  <button class="active" onclick="showTab('dashboard',this)">📊 Dashboard</button>
+  <button onclick="showTab('menu',this)">🗓️ Weekly Menu</button>
+  <button onclick="showTab('patients',this)">🛏️ Patients</button>
+  <button onclick="showTab('import',this)">📥 PDF Import</button>
+  <button onclick="showTab('register',this)">📋 Diet Register</button>
+  <button onclick="showTab('indent',this)">🛒 Diet Indent</button>
+</nav>
+
+<!-- DASHBOARD -->
+<div id="tab-dashboard" class="tab active">
+  <div class="card">
+    <h3>📅 Select Date</h3>
+    <div class="grid3">
+      <div><label>View Date</label><input type="date" id="dashDate" onchange="refreshDashboard()"></div>
+      <div><label>Hospital</label><input value="Jain AGM Ayurvedic Medical College & Hospital" readonly></div>
+      <div><label>Total Beds</label><input value="140" readonly></div>
+    </div>
+  </div>
+  <div class="grid4" id="statBoxes" style="margin-bottom:16px"></div>
+  <div class="card">
+    <h3>🏥 Ward-wise Occupancy</h3>
+    <table><thead><tr><th>Ward</th><th>Admitted</th><th>Breakfast</th><th>Lunch</th><th>Dinner</th></tr></thead>
+    <tbody id="wardSummaryTable"></tbody></table>
+  </div>
+</div>
+
+<!-- WEEKLY MENU -->
+<div id="tab-menu" class="tab">
+  <div class="card">
+    <h3>🗓️ Weekly Menu Setup — Common for All Wards</h3>
+    <p style="font-size:12px;color:#666;margin-bottom:12px">Set default meals for each day. Auto-fills when a patient is admitted.</p>
+    <div class="day-tabs" id="menuDayTabs"></div>
+    <div id="menuDayContent"></div>
+    <div class="flex-end">
+      <button class="btn btn-success" onclick="saveWeeklyMenu()">💾 Save Menu</button>
+      <button class="btn btn-info" onclick="printMenu()">🖨️ Print Menu</button>
+    </div>
+  </div>
+</div>
+
+<!-- PATIENTS -->
+<div id="tab-patients" class="tab">
+  <div class="card">
+    <h3>➕ Admit New Patient</h3>
+    <div class="grid3">
+      <div><label>Patient Name</label><input id="pt_name" placeholder="Full Name"></div>
+      <div><label>IPD Number</label><input id="pt_ipd" placeholder="IP2400476"></div>
+      <div><label>OPD Number</label><input id="pt_opd" placeholder="240203486"></div>
+    </div>
+    <div class="grid3">
+      <div><label>Ward</label>
+        <select id="pt_ward">
+          <option>Kayachikitsa</option><option>Shalya Tantra</option><option>Shalakya Tantra</option>
+          <option>Panchakarma</option><option>Kaumara Bhritya</option><option>Prasuti Tantra & Stri Roga</option>
+        </select>
+      </div>
+      <div><label>Bed Number</label><input id="pt_bed" placeholder="KC051"></div>
+      <div><label>Age / Gender</label><input id="pt_age" placeholder="50 / Male"></div>
+    </div>
+    <div class="grid2">
+      <div><label>Diagnosis</label><input id="pt_diag" placeholder="e.g. Sandivata, Prameha..."></div>
+      <div><label>Diet Type / Special Instructions</label><input id="pt_diettype" placeholder="e.g. Diabetic, No salt..."></div>
+    </div>
+    <div class="grid3">
+      <div><label>Admission Date (DOA)</label><input type="date" id="pt_adm"></div>
+      <div><label>Expected Discharge</label><input type="date" id="pt_dis"></div>
+      <div><label>No. of Days (1–15)</label><input type="number" id="pt_days" min="1" max="15" placeholder="7" oninput="calcDischarge()"></div>
+    </div>
+    <div class="flex-end">
+      <button class="btn btn-primary" onclick="admitPatient()">✅ Admit & Generate Diet Schedule</button>
+    </div>
+  </div>
+  <div class="card">
+    <h3>🛏️ Currently Admitted Patients</h3>
+    <div class="flex" style="margin-bottom:10px;align-items:center">
+      <input style="width:200px;margin-bottom:0" id="ptSearch" placeholder="Search name / IPD..." oninput="renderPatientTable()">
+      <select style="width:180px;margin-bottom:0" id="ptWardFilter" onchange="renderPatientTable()">
+        <option value="">All Wards</option>
+        <option>Kayachikitsa</option><option>Shalya Tantra</option><option>Shalakya Tantra</option>
+        <option>Panchakarma</option><option>Kaumara Bhritya</option><option>Prasuti Tantra & Stri Roga</option>
+      </select>
+      <button class="btn btn-danger btn-sm" onclick="dischargeSelected()">🚪 Discharge Selected</button>
+    </div>
+    <div style="overflow-x:auto">
+      <table><thead><tr>
+        <th><input type="checkbox" id="selectAll" onchange="toggleAll()"></th>
+        <th>IPD No.</th><th>OPD No.</th><th>Name</th><th>Ward</th><th>Bed</th><th>Age/Gender</th>
+        <th>Diagnosis</th><th>DOA</th><th>Discharge</th><th>Days</th><th>Diet Type</th><th>Action</th>
+      </tr></thead><tbody id="patientTableBody"></tbody></table>
+    </div>
+  </div>
+</div>
+
+<!-- PDF IMPORT -->
+<div id="tab-import" class="tab">
+  <div class="card">
+    <h3>📥 Import Patients from PDF Report</h3>
+    <p style="font-size:12px;color:#555;margin-bottom:14px">Upload the Bed Occupancy PDF downloaded from your hospital software.</p>
+    <div class="upload-zone" onclick="document.getElementById('pdfFileInput').click()">
+      <input type="file" id="pdfFileInput" accept=".pdf" onchange="handlePDFUpload(this)">
+      <div class="icon">📄</div>
+      <p>Click to upload PDF Report</p>
+      <small>Supports: Jain AGM Bed Occupancy Report format</small>
+    </div>
+    <div id="pdfStatus"></div>
+    <div id="wardMappingSection" style="display:none">
+      <div class="card" style="background:#f8f9fa;border:1px solid #d6eaf8">
+        <h3>🏥 Ward Mapping</h3>
+        <div id="wardMappingRows"></div>
+      </div>
+    </div>
+    <div id="importDatesSection" style="display:none">
+      <div class="card" style="background:#f8f9fa;border:1px solid #d6eaf8">
+        <h3>📅 Admission Settings</h3>
+        <div class="grid3">
+          <div><label>Default No. of Days (1–15)</label><input type="number" id="importDefaultDays" value="7" min="1" max="15"></div>
+          <div><label>Diet Type (default)</label><input id="importDefaultDiet" placeholder="Regular"></div>
+          <div style="display:flex;align-items:flex-end;padding-bottom:10px">
+            <button class="btn btn-warning" onclick="applyDefaultDays()">Apply to All</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="importPreviewSection" style="display:none">
+      <div class="card">
+        <h3>👁️ Preview Extracted Patients</h3>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px">
+          <button class="btn btn-primary btn-sm" onclick="selectAllImport(true)">✅ Select All</button>
+          <button class="btn btn-sm" style="background:#eee" onclick="selectAllImport(false)">☐ Deselect All</button>
+          <span id="importCountLabel" style="font-size:12px;color:#555"></span>
+          <button class="btn btn-success" onclick="importSelected()" style="margin-left:auto">📥 Import Selected</button>
+        </div>
+        <div class="import-preview">
+          <table id="importPreviewTable">
+            <thead><tr>
+              <th>✓</th><th>#</th><th>OPD No.</th><th>IPD No.</th><th>Name</th>
+              <th>Gender</th><th>Age</th><th>Diagnosis</th><th>Bed</th>
+              <th>DOA</th><th>Ward</th><th>Days</th><th>Diet Type</th>
+            </tr></thead>
+            <tbody id="importPreviewBody"></tbody>
+          </table>
+        </div>
+        <div class="flex-end" style="margin-top:12px">
+          <button class="btn btn-success" onclick="importSelected()">📥 Import Selected Patients</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DIET REGISTER -->
+<div id="tab-register" class="tab">
+  <div class="card">
+    <h3>📋 Diet Register</h3>
+    <div class="flex" style="margin-bottom:12px">
+      <div><label>From Date</label><input type="date" id="regDateFrom" style="width:170px;margin-bottom:0" onchange="renderRegister()"></div>
+      <div><label>To Date</label><input type="date" id="regDateTo" style="width:170px;margin-bottom:0" onchange="renderRegister()"></div>
+      <div><label>Ward</label>
+        <select id="regWard" style="width:190px;margin-bottom:0" onchange="renderRegister()">
+          <option value="">All Wards</option>
+          <option>Kayachikitsa</option><option>Shalya Tantra</option><option>Shalakya Tantra</option>
+          <option>Panchakarma</option><option>Kaumara Bhritya</option><option>Prasuti Tantra & Stri Roga</option>
+        </select>
+      </div>
+      <button class="btn btn-success" onclick="saveRegisterEdits()">💾 Save</button>
+      <button class="btn btn-info" onclick="printRegister()">🖨️ Print</button>
+    </div>
+    <div id="registerContent"></div>
+  </div>
+</div>
+
+<!-- DIET INDENT -->
+<div id="tab-indent" class="tab">
+  <div class="card">
+    <h3>🛒 Diet Indent</h3>
+    <div class="flex" style="margin-bottom:12px">
+      <div><label>From Date</label><input type="date" id="indentDateFrom" style="width:170px;margin-bottom:0" onchange="renderIndent()"></div>
+      <div><label>To Date</label><input type="date" id="indentDateTo" style="width:170px;margin-bottom:0" onchange="renderIndent()"></div>
+      <button class="btn btn-success" onclick="saveIndent()">💾 Save</button>
+      <button class="btn btn-info" onclick="printIndent()">🖨️ Print</button>
+    </div>
+    <div id="indentContent"></div>
+  </div>
+</div>
+
+<div class="print-area" id="printArea"></div>
+
+<script>
+pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+// ===== DATA =====
+let patients=JSON.parse(localStorage.getItem('agm_patients')||'[]');
+let dietSchedules=JSON.parse(localStorage.getItem('agm_schedules')||'{}');
+let weeklyMenu=JSON.parse(localStorage.getItem('agm_menu')||'null');
+let indentData=JSON.parse(localStorage.getItem('agm_indent')||'{}');
+let importedRows=[];
+let detectedWard='Kayachikitsa';
+
+const WARDS=['Kayachikitsa','Shalya Tantra','Shalakya Tantra','Panchakarma','Kaumara Bhritya','Prasuti Tantra & Stri Roga'];
+const DAYS=['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+const MEALS=['Breakfast','Lunch','Dinner'];
+
+const SOUTH_INDIAN={
+  Breakfast:['Idli + Sambar + Chutney','Dosa + Chutney + Sambar','Upma + Chutney','Poha (Aval Upma)','Pongal + Chutney','Rava Idli + Chutney','Ragi Mudde + Curry','Wheat Dosa + Sambar','Semiya Upma','Plain Rice + Rasam'],
+  Lunch:['Rice + Sambar + Rasam + Papad + Curd','Rice + Dal + Vegetable Curry + Pickle','Rice + Kootu + Rasam + Curd','Chapati + Sabzi + Dal + Rice','Rice + Mor Kuzhambu + Papad','Rice + Bisibelebath + Raita','Rice + Sambar + Aviyal + Curd','Roti + Sabzi + Dal + Rice + Curd','Rice + Rajma + Papad + Curd'],
+  Dinner:['Chapati + Dal + Vegetable Curry','Rice + Rasam + Papad','Roti + Sabzi + Curd','Idli + Sambar','Dosa + Chutney','Rice + Dal Tadka + Pickle','Chapati + Palya + Rasam Rice','Rice + Sambar + Vegetable Stir Fry','Upma + Curd','Ragi Ball + Sambar']
+};
+
+const ING_CATS={
+  'Cereals & Grains':['Rice (kg)','Wheat Flour (kg)','Ragi Flour (kg)','Rava/Semolina (kg)','Rice Flour (kg)','Poha (kg)','Bread (loaves)'],
+  'Pulses & Legumes':['Toor Dal (kg)','Moong Dal (kg)','Chana Dal (kg)','Rajma (kg)','Urad Dal (kg)','Masoor Dal (kg)'],
+  'Vegetables':['Tomato (kg)','Onion (kg)','Potato (kg)','Beans (kg)','Carrot (kg)','Cabbage (kg)','Drumstick (nos)','Brinjal (kg)','Spinach (kg)','Coriander Leaves (bunch)'],
+  'Dairy & Fats':['Milk (litres)','Curd (kg)','Ghee (kg)','Cooking Oil (litres)'],
+  'Spices':['Mustard Seeds (g)','Cumin Seeds (g)','Turmeric (g)','Red Chilli (g)','Salt (kg)','Tamarind (g)','Curry Leaves (bunch)','Coconut (nos)'],
+  'Others':['Sugar (kg)','Jaggery (kg)','Papad (nos)','Banana (dozen)','Tea/Coffee (g)']
+};
+
+const WARD_KEYWORDS={
+  'Kayachikitsa':['kaya','kayachikitsa','general medicine'],
+  'Shalya Tantra':['shalya','surgery'],
+  'Shalakya Tantra':['shalakya','ent','eye'],
+  'Panchakarma':['panchakarma','panchkarma'],
+  'Kaumara Bhritya':['kaumara','paediatric','pediatric'],
+  'Prasuti Tantra & Stri Roga':['prasuti','stri','gynaecology','gynecology','obstetric']
+};
+
+const DEFAULT_MENU={};
+DAYS.forEach((d,i)=>{
+  DEFAULT_MENU[d]={
+    Breakfast:SOUTH_INDIAN.Breakfast[i%SOUTH_INDIAN.Breakfast.length],
+    Lunch:SOUTH_INDIAN.Lunch[i%SOUTH_INDIAN.Lunch.length],
+    Dinner:SOUTH_INDIAN.Dinner[i%SOUTH_INDIAN.Dinner.length]
+  };
+});
+if(!weeklyMenu) weeklyMenu=JSON.parse(JSON.stringify(DEFAULT_MENU));
+
+// ===== UTILS =====
+function today(){return new Date().toISOString().split('T')[0];}
+function toDateStr(d){return d instanceof Date?d.toISOString().split('T')[0]:d;}
+function getDayName(ds){const d=new Date(ds+'T00:00:00');return DAYS[d.getDay()===0?6:d.getDay()-1];}
+function addDays(ds,n){const d=new Date(ds+'T00:00:00');d.setDate(d.getDate()+n);return toDateStr(d);}
+function formatDate(ds){if(!ds)return'';const d=new Date(ds+'T00:00:00');return d.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});}
+function parseDDMMYYYY(s){if(!s)return'';const m=s.match(/(\d{1,2})[.\-/](\d{1,2})[.\-/](\d{4})/);if(m)return`${m[3]}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`;return'';}
+function wardBadge(w){const map={'Kayachikitsa':'badge-k','Shalya Tantra':'badge-s','Shalakya Tantra':'badge-sh','Panchakarma':'badge-p','Kaumara Bhritya':'badge-kb','Prasuti Tantra & Stri Roga':'badge-ps'};return`<span class="badge ${map[w]||''}">${w}</span>`;}
+function save(){
+  localStorage.setItem('agm_patients',JSON.stringify(patients));
+  localStorage.setItem('agm_schedules',JSON.stringify(dietSchedules));
+  localStorage.setItem('agm_menu',JSON.stringify(weeklyMenu));
+  localStorage.setItem('agm_indent',JSON.stringify(indentData));
+}
+function setStatus(msg,type){const el=document.getElementById('pdfStatus');el.className='status-'+type;el.textContent=msg;el.style.display='block';}
+
+function getDateRange(fromId,toId){
+  const from=document.getElementById(fromId).value||today();
+  const to=document.getElementById(toId).value||from;
+  if(to<from){document.getElementById(toId).value=from;return[from];}
+  const dates=[];let cur=from;
+  while(cur<=to){dates.push(cur);cur=addDays(cur,1);}
+  return dates;
+}
+
+// ===== TABS =====
+function showTab(t,btn){
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(x=>x.classList.remove('active'));
+  document.getElementById('tab-'+t).classList.add('active');
+  if(btn)btn.classList.add('active');
+  if(t==='dashboard')refreshDashboard();
+  if(t==='menu')renderMenuSetup();
+  if(t==='patients')renderPatientTable();
+  if(t==='register'){
+    if(!document.getElementById('regDateFrom').value){
+      document.getElementById('regDateFrom').value=today();
+      document.getElementById('regDateTo').value=today();
+    }
+    renderRegister();
+  }
+  if(t==='indent'){
+    if(!document.getElementById('indentDateFrom').value){
+      document.getElementById('indentDateFrom').value=today();
+      document.getElementById('indentDateTo').value=today();
+    }
+    renderIndent();
+  }
+}
+
+// ===== DASHBOARD =====
+function refreshDashboard(){
+  const dt=document.getElementById('dashDate').value||today();
+  const pts=patients.filter(p=>p.admitted&&p.admDate<=dt&&p.disDate>=dt);
+  const n=pts.length;
+  const wards={};WARDS.forEach(w=>wards[w]=0);
+  pts.forEach(p=>{if(wards[p.ward]!==undefined)wards[p.ward]++;});
+  document.getElementById('statBoxes').innerHTML=`
+    <div class="stat-box"><div class="num">${n}</div><div class="lbl">Admitted</div></div>
+    <div class="stat-box" style="background:#1e8449"><div class="num">140</div><div class="lbl">Total Beds</div></div>
+    <div class="stat-box" style="background:#7d3c98"><div class="num">${Math.round(n/140*100)}%</div><div class="lbl">Occupancy</div></div>
+    <div class="stat-box" style="background:#ca6f1e"><div class="num">${n*3}</div><div class="lbl">Meals Today</div></div>`;
+  document.getElementById('wardSummaryTable').innerHTML=WARDS.map(w=>`<tr><td>${wardBadge(w)}</td><td>${wards[w]}</td><td>${wards[w]}</td><td>${wards[w]}</td><td>${wards[w]}</td></tr>`).join('');
+}
+
+// ===== WEEKLY MENU =====
+let menuDayIdx=0;
+function renderMenuSetup(){
+  document.getElementById('menuDayTabs').innerHTML=DAYS.map((d,i)=>`<button class="day-tab ${i===menuDayIdx?'active':''}" onclick="menuDayIdx=${i};renderMenuSetup()">${d}</button>`).join('');
+  const d=DAYS[menuDayIdx],m=weeklyMenu[d]||{};
+  document.getElementById('menuDayContent').innerHTML=`<div class="grid3">${MEALS.map(meal=>`
+    <div><label>${meal}</label>
+      <select id="menu_${meal}_sel" onchange="document.getElementById('menu_${meal}_txt').value=this.value==='__custom__'?'':this.value">
+        <option value="">-- Select --</option>
+        ${SOUTH_INDIAN[meal].map(x=>`<option ${m[meal]===x?'selected':''}>${x}</option>`).join('')}
+        <option value="__custom__" ${m[meal]&&!SOUTH_INDIAN[meal].includes(m[meal])?'selected':''}>Custom...</option>
+      </select>
+      <input id="menu_${meal}_txt" class="custom-input" placeholder="Or type custom" value="${m[meal]&&!SOUTH_INDIAN[meal].includes(m[meal])?m[meal]:''}">
+    </div>`).join('')}</div>`;
+}
+function saveWeeklyMenu(){
+  const d=DAYS[menuDayIdx];
+  if(!weeklyMenu[d])weeklyMenu[d]={};
+  MEALS.forEach(meal=>{
+    const txt=document.getElementById(`menu_${meal}_txt`).value.trim();
+    const sel=document.getElementById(`menu_${meal}_sel`).value;
+    weeklyMenu[d][meal]=txt||(sel&&sel!=='__custom__'?sel:'');
+  });
+  save();alert(`Menu for ${d} saved!`);
+}
+
+// ===== PATIENTS =====
+function calcDischarge(){
+  const adm=document.getElementById('pt_adm').value;
+  const days=parseInt(document.getElementById('pt_days').value)||0;
+  if(adm&&days>0)document.getElementById('pt_dis').value=addDays(adm,days-1);
+}
+function generateSchedule(p){
+  for(let i=0;i<p.days;i++){
+    const dt=addDays(p.admDate,i);
+    const menu=weeklyMenu[getDayName(dt)]||{};
+    if(!dietSchedules[dt])dietSchedules[dt]={};
+    dietSchedules[dt][p.id]={Breakfast:menu.Breakfast||'',Lunch:menu.Lunch||'',Dinner:menu.Dinner||''};
+  }
+}
+function admitPatient(){
+  const name=document.getElementById('pt_name').value.trim();
+  const ipd=document.getElementById('pt_ipd').value.trim();
+  const adm=document.getElementById('pt_adm').value;
+  const days=parseInt(document.getElementById('pt_days').value)||0;
+  if(!name||!ipd){alert('Name and IPD number are required.');return;}
+  if(!adm||!days){alert('Please enter admission date and number of days.');return;}
+  const p={
+    id:Date.now().toString(),name,ipd,
+    opd:document.getElementById('pt_opd').value.trim(),
+    ward:document.getElementById('pt_ward').value,
+    bed:document.getElementById('pt_bed').value.trim(),
+    age:document.getElementById('pt_age').value.trim(),
+    diag:document.getElementById('pt_diag').value.trim(),
+    dietType:document.getElementById('pt_diettype').value.trim(),
+    admDate:adm,disDate:addDays(adm,days-1),days,admitted:true
+  };
+  patients.push(p);generateSchedule(p);save();
+  ['pt_name','pt_ipd','pt_opd','pt_bed','pt_age','pt_diag','pt_diettype','pt_adm','pt_dis','pt_days'].forEach(id=>document.getElementById(id).value='');
+  renderPatientTable();
+  alert(`${name} admitted. Diet schedule generated for ${days} days.`);
+}
+function renderPatientTable(){
+  const s=(document.getElementById('ptSearch')||{}).value?.toLowerCase()||'';
+  const wf=(document.getElementById('ptWardFilter')||{}).value||'';
+  const list=patients.filter(p=>p.admitted&&(!s||(p.name.toLowerCase().includes(s)||p.ipd.toLowerCase().includes(s)))&&(!wf||p.ward===wf));
+  document.getElementById('patientTableBody').innerHTML=list.length?list.map(p=>`
+    <tr><td><input type="checkbox" class="ptCheck" value="${p.id}"></td>
+    <td><b>${p.ipd}</b></td><td>${p.opd||'-'}</td><td>${p.name}</td>
+    <td>${wardBadge(p.ward)}</td><td>${p.bed||'-'}</td><td>${p.age||'-'}</td>
+    <td>${p.diag||'-'}</td><td>${formatDate(p.admDate)}</td><td>${formatDate(p.disDate)}</td>
+    <td>${p.days||'-'}</td><td>${p.dietType||'Regular'}</td>
+    <td><button class="btn btn-danger btn-sm" onclick="dischargeOne('${p.id}')">Discharge</button></td></tr>`).join('')
+    :'<tr><td colspan="13" style="text-align:center;color:#999">No patients found.</td></tr>';
+}
+function toggleAll(){const v=document.getElementById('selectAll').checked;document.querySelectorAll('.ptCheck').forEach(c=>c.checked=v);}
+function dischargeOne(id){if(!confirm('Discharge this patient?'))return;const p=patients.find(x=>x.id===id);if(p){p.admitted=false;save();renderPatientTable();}}
+function dischargeSelected(){
+  const ids=[...document.querySelectorAll('.ptCheck:checked')].map(x=>x.value);
+  if(!ids.length){alert('Select patients first.');return;}
+  if(!confirm(`Discharge ${ids.length} patient(s)?`))return;
+  ids.forEach(id=>{const p=patients.find(x=>x.id===id);if(p)p.admitted=false;});
+  save();renderPatientTable();
+}
+
+// ===== PDF IMPORT =====
+async function handlePDFUpload(input){
+  const file=input.files[0];if(!file)return;
+  setStatus('Reading PDF...','info');
+  document.getElementById('wardMappingSection').style.display='none';
+  document.getElementById('importDatesSection').style.display='none';
+  document.getElementById('importPreviewSection').style.display='none';
+  try{
+    const ab=await file.arrayBuffer();
+    const pdf=await pdfjsLib.getDocument({data:ab}).promise;
+    let fullText='';
+    for(let i=1;i<=pdf.numPages;i++){
+      const page=await pdf.getPage(i);
+      const content=await page.getTextContent();
+      fullText+=content.items.map(x=>x.str).join(' ')+'\n';
+    }
+    parseAndPreview(fullText);
+  }catch(e){setStatus('Error reading PDF: '+e.message,'error');}
+}
+function detectWard(text){
+  const lower=text.toLowerCase();
+  for(const [ward,kws] of Object.entries(WARD_KEYWORDS)){if(kws.some(kw=>lower.includes(kw)))return ward;}
+  return'Kayachikitsa';
+}
+function parseAndPreview(text){
+  detectedWard=detectWard(text);
+  const lines=text.split(/[\n\r]+/).map(l=>l.trim()).filter(l=>l.length>2);
+  const rows=[];
+  for(let i=0;i<lines.length;i++){
+    const line=lines[i];
+    const slMatch=line.match(/^(\d+)\s+([\d.]+)\s+(\d{9,12})\s+(IP\d+)\s+(.+)/i);
+    if(!slMatch)continue;
+    const rest=slMatch[5];
+    const genderMatch=rest.match(/\b(Male|Female)\b/i);
+    if(!genderMatch)continue;
+    const genderIdx=rest.indexOf(genderMatch[0]);
+    const namePart=rest.substring(0,genderIdx).trim();
+    const afterGender=rest.substring(genderIdx+genderMatch[0].length).trim();
+    const ageMatch=afterGender.match(/^(\d{1,3})\s*(.*)/);
+    const age=ageMatch?ageMatch[1]:'';
+    const remaining=ageMatch?ageMatch[2].trim():'';
+    const doaMatch=remaining.match(/(\d{2}\.\d{2}\.\d{4})/);
+    let diag='',doa='';
+    if(doaMatch){
+      const doaIdx=remaining.indexOf(doaMatch[0]);
+      const beforeDoa=remaining.substring(0,doaIdx).trim();
+      const tokens=beforeDoa.split(/\s+/);
+      const diagTokens=[];let inAddr=false;
+      tokens.forEach(t=>{if(!inAddr&&/^[A-Z\s]+$/.test(t)&&t.length>2)diagTokens.push(t);else inAddr=true;});
+      diag=diagTokens.join(' ').trim()||beforeDoa;
+      doa=parseDDMMYYYY(doaMatch[0]);
+    }
+    const bedMatch=remaining.match(/([A-Z]{2}\d{3,4})\s*$/);
+    rows.push({sl:slMatch[1],opd:slMatch[3],ipd:slMatch[4],name:namePart.replace(/\s+/g,' ').trim(),gender:genderMatch[0],age,diag,doa:doa||parseDDMMYYYY(slMatch[2]),bed:bedMatch?bedMatch[1]:'',ward:detectedWard});
+  }
+  if(!rows.length){setStatus('Could not extract patient rows. Please check the PDF format.','error');return;}
+  importedRows=rows;
+  showWardMapping(detectedWard);
+  renderImportTable(rows);
+  document.getElementById('importPreviewSection').style.display='block';
+  document.getElementById('importCountLabel').textContent=`${rows.length} patients extracted`;
+  setStatus(`✅ Extracted ${rows.length} patient record(s). Review and import below.`,'success');
+}
+function showWardMapping(detected){
+  document.getElementById('wardMappingSection').style.display='block';
+  document.getElementById('wardMappingRows').innerHTML=`
+    <div class="ward-map-row">
+      <span style="font-weight:600;min-width:180px">Detected: <b>${detected}</b></span>
+      <span>→ Map to:</span>
+      <select id="wardMapSelect">${WARDS.map(w=>`<option ${w===detected?'selected':''}>${w}</option>`).join('')}</select>
+      <button class="btn btn-warning btn-sm" onclick="applyWardMapping()">Apply</button>
+    </div>`;
+  document.getElementById('importDatesSection').style.display='block';
+}
+function applyWardMapping(){
+  const w=document.getElementById('wardMapSelect').value;
+  importedRows.forEach(r=>r.ward=w);
+  renderImportTable(importedRows);
+}
+function applyDefaultDays(){
+  const days=parseInt(document.getElementById('importDefaultDays').value)||7;
+  const diet=document.getElementById('importDefaultDiet').value||'Regular';
+  document.querySelectorAll('.imp-days').forEach(el=>el.value=days);
+  document.querySelectorAll('.imp-diet').forEach(el=>el.value=diet);
+}
+function renderImportTable(rows){
+  const dd=parseInt(document.getElementById('importDefaultDays')?.value)||7;
+  document.getElementById('importPreviewBody').innerHTML=rows.map((r,i)=>`
+    <tr class="import-row-edit">
+      <td><input type="checkbox" class="impCheck" checked value="${i}"></td>
+      <td>${r.sl}</td>
+      <td><input value="${r.opd}" style="width:105px;margin-bottom:0" data-idx="${i}" data-field="opd"></td>
+      <td><input value="${r.ipd}" style="width:95px;margin-bottom:0" data-idx="${i}" data-field="ipd"></td>
+      <td><input value="${r.name}" style="width:145px;margin-bottom:0" data-idx="${i}" data-field="name"></td>
+      <td><select class="imp-gender" data-idx="${i}" style="width:80px;margin-bottom:0">
+        <option ${r.gender==='Male'?'selected':''}>Male</option>
+        <option ${r.gender==='Female'?'selected':''}>Female</option>
+      </select></td>
+      <td><input value="${r.age}" style="width:40px;margin-bottom:0" data-idx="${i}" data-field="age"></td>
+      <td><input value="${r.diag}" style="width:130px;margin-bottom:0" data-idx="${i}" data-field="diag"></td>
+      <td><input value="${r.bed}" style="width:55px;margin-bottom:0" data-idx="${i}" data-field="bed"></td>
+      <td><input type="date" value="${r.doa}" style="width:130px;margin-bottom:0" data-idx="${i}" data-field="doa"></td>
+      <td><select class="imp-ward" data-idx="${i}" style="width:160px;margin-bottom:0">${WARDS.map(w=>`<option ${r.ward===w?'selected':''}>${w}</option>`).join('')}</select></td>
+      <td><input type="number" class="imp-days" value="${dd}" min="1" max="15" style="width:45px;margin-bottom:0" data-idx="${i}"></td>
+      <td><input class="imp-diet" value="Regular" style="width:90px;margin-bottom:0" data-idx="${i}"></td>
+    </tr>`).join('');
+}
+function selectAllImport(v){document.querySelectorAll('.impCheck').forEach(c=>c.checked=v);}
+function importSelected(){
+  const checked=[...document.querySelectorAll('.impCheck:checked')].map(c=>parseInt(c.value));
+  if(!checked.length){alert('Select at least one patient.');return;}
+  let imported=0,skipped=0;
+  checked.forEach(idx=>{
+    const getVal=field=>{const el=document.querySelector(`input[data-idx="${idx}"][data-field="${field}"]`);return el?el.value.trim():'';};
+    const name=getVal('name'),ipd=getVal('ipd'),doa=getVal('doa');
+    const days=parseInt(document.querySelector(`.imp-days[data-idx="${idx}"]`)?.value)||7;
+    const ward=document.querySelector(`.imp-ward[data-idx="${idx}"]`)?.value||detectedWard;
+    const gender=document.querySelector(`.imp-gender[data-idx="${idx}"]`)?.value||'';
+    const diet=document.querySelector(`.imp-diet[data-idx="${idx}"]`)?.value||'Regular';
+    if(!name||!ipd||!doa){skipped++;return;}
+    if(patients.find(p=>p.ipd===ipd&&p.admitted)){skipped++;return;}
+    const p={id:Date.now().toString()+'_'+idx,name,ipd,opd:getVal('opd'),ward,bed:getVal('bed'),age:getVal('age')+' / '+gender,diag:getVal('diag'),dietType:diet,admDate:doa,disDate:addDays(doa,days-1),days,admitted:true};
+    patients.push(p);generateSchedule(p);imported++;
+  });
+  save();
+  alert(`✅ ${imported} patient(s) imported.${skipped?' '+skipped+' skipped (missing data or duplicate IPD).':''}`);
+  renderPatientTable();
+  if(imported>0){
+    document.getElementById('importPreviewSection').style.display='none';
+    document.getElementById('wardMappingSection').style.display='none';
+    document.getElementById('importDatesSection').style.display='none';
+    document.getElementById('pdfFileInput').value='';
+    setStatus(`✅ ${imported} patient(s) imported successfully. Go to Patients tab to review.`,'success');
+  }
+}
+
+// ===== DIET REGISTER =====
+function getMealOpts(meal,sel){
+  return`<option value="">-- Select --</option>
+    ${SOUTH_INDIAN[meal].map(x=>`<option ${sel===x?'selected':''}>${x}</option>`).join('')}
+    <option value="__custom__" ${sel&&!SOUTH_INDIAN[meal].includes(sel)?'selected':''}>Custom...</option>`;
+}
+function renderRegister(){
+  const dates=getDateRange('regDateFrom','regDateTo');
+  const wf=document.getElementById('regWard').value||'';
+  let html='';
+  dates.forEach(dt=>{
+    const pts=patients.filter(p=>p.admitted&&p.admDate<=dt&&p.disDate>=dt&&(!wf||p.ward===wf));
+    if(!pts.length)return;
+    const byWard={};pts.forEach(p=>{if(!byWard[p.ward])byWard[p.ward]=[];byWard[p.ward].push(p);});
+    html+=`<div class="day-section" style="border:1px solid #d6eaf8;border-radius:8px;margin-bottom:16px;overflow:hidden">
+      <div style="background:#eaf4fb;padding:8px 14px;font-weight:700;color:#1a5276">
+        📅 ${formatDate(dt)} — ${getDayName(dt)} &nbsp;|&nbsp; ${pts.length} patients &nbsp;|&nbsp; ${pts.length*3} meals
+      </div>`;
+    Object.keys(byWard).forEach(ward=>{
+      html+=`<div class="ward-section" style="padding:10px">
+        <div class="ward-header">🏥 ${ward} — ${byWard[ward].length} patient(s)</div>
+        <div style="overflow-x:auto"><table><thead><tr>
+          <th>#</th><th>IPD No.</th><th>Name</th><th>Age/Gender</th><th>Diagnosis</th><th>Diet Type</th><th>Breakfast</th><th>Lunch</th><th>Dinner</th>
+        </tr></thead><tbody>`;
+      byWard[ward].forEach((p,i)=>{
+        const s=(dietSchedules[dt]&&dietSchedules[dt][p.id])||{Breakfast:'',Lunch:'',Dinner:''};
+        html+=`<tr><td>${i+1}</td><td><b>${p.ipd}</b></td><td>${p.name}</td><td>${p.age||'-'}</td><td>${p.diag||'-'}</td><td>${p.dietType||'Regular'}</td>
+          ${MEALS.map(meal=>`<td class="meal-cell">
+            <select id="reg_${dt}_${p.id}_${meal}" onchange="document.getElementById('reg_${dt}_${p.id}_${meal}_txt').value=this.value==='__custom__'?'':this.value">
+              ${getMealOpts(meal,s[meal])}
+            </select>
+            <input id="reg_${dt}_${p.id}_${meal}_txt" class="custom-input" placeholder="Custom..." value="${s[meal]&&!SOUTH_INDIAN[meal].includes(s[meal])?s[meal]:''}">
+          </td>`).join('')}</tr>`;
+      });
+      html+=`</tbody></table></div></div>`;
+    });
+    html+=`</div>`;
+  });
+  document.getElementById('registerContent').innerHTML=html||`<p style="color:#999;text-align:center;padding:20px">No admitted patients for this date range.</p>`;
+}
+function saveRegisterEdits(){
+  const dates=getDateRange('regDateFrom','regDateTo');
+  dates.forEach(dt=>{
+    const pts=patients.filter(p=>p.admitted&&p.admDate<=dt&&p.disDate>=dt);
+    if(!dietSchedules[dt])dietSchedules[dt]={};
+    pts.forEach(p=>{
+      if(!dietSchedules[dt][p.id])dietSchedules[dt][p.id]={};
+      MEALS.forEach(meal=>{
+        const sel=document.getElementById(`reg_${dt}_${p.id}_${meal}`);
+        const txt=document.getElementById(`reg_${dt}_${p.id}_${meal}_txt`);
+        if(sel&&txt){const v=txt.value.trim()||sel.value;dietSchedules[dt][p.id][meal]=v==='-- Select --'?'':v;}
+      });
+    });
+    updateIndentFromRegister(dt);
+  });
+  save();alert('Diet register saved!');
+}
+
+// ===== DIET INDENT =====
+function updateIndentFromRegister(dt){
+  const pts=patients.filter(p=>p.admitted&&p.admDate<=dt&&p.disDate>=dt);
+  const counts={};const sched=dietSchedules[dt]||{};
+  pts.forEach(p=>{const ps=sched[p.id]||{};MEALS.forEach(meal=>{const item=ps[meal]||'';if(item)counts[item]=(counts[item]||0)+1;});});
+  if(!indentData[dt])indentData[dt]={counts,ingredients:{}};
+  else indentData[dt].counts=counts;
+  save();
+}
+function getSuggested(item,n){
+  if(item.includes('Rice'))return(n*0.2).toFixed(1);
+  if(item.includes('Wheat')||item.includes('Rava'))return(n*0.1).toFixed(1);
+  if(item.includes('Dal')||item.includes('Rajma'))return(n*0.08).toFixed(1);
+  if(item.includes('Milk'))return(n*0.3).toFixed(1);
+  if(item.includes('Oil'))return(n*0.02).toFixed(2);
+  if(item.includes('Tomato')||item.includes('Onion'))return(n*0.1).toFixed(1);
+  if(item.includes('Salt'))return(n*0.01).toFixed(2);
+  if(item.includes('Ghee'))return(n*0.01).toFixed(2);
+  if(item.includes('Coconut'))return Math.ceil(n*0.05);
+  if(item.includes('Banana'))return Math.ceil(n/12);
+  if(item.includes('Papad'))return n;
+  if(item.includes('Tamarind')||item.includes('Turmeric')||item.includes('Mustard')||item.includes('Cumin'))return(n*2).toFixed(0);
+  return'';
+}
+function renderIndent(){
+  const dates=getDateRange('indentDateFrom','indentDateTo');
+  dates.forEach(dt=>updateIndentFromRegister(dt));
+  const allPtIds=new Set();
+  const mc={Breakfast:{},Lunch:{},Dinner:{}};
+  let totalMeals=0;
+  let maxN=0;
+  dates.forEach(dt=>{
+    const pts=patients.filter(p=>p.admitted&&p.admDate<=dt&&p.disDate>=dt);
+    if(pts.length>maxN)maxN=pts.length;
+    pts.forEach(p=>allPtIds.add(p.id));
+    const sched=dietSchedules[dt]||{};
+    pts.forEach(p=>{
+      const ps=sched[p.id]||{};
+      MEALS.forEach(meal=>{const item=ps[meal]||weeklyMenu[getDayName(dt)]?.[meal]||'';if(item){mc[meal][item]=(mc[meal][item]||0)+1;totalMeals++;}});
+    });
+  });
+  const n=maxN||1;
+  const nd=dates.length;
+  const from=formatDate(dates[0]);
+  const to=formatDate(dates[nd-1]);
+  const rangeLabel=nd===1?`📅 <b>${from}</b>`:`📅 <b>${from}</b> to <b>${to}</b> (${nd} days)`;
+  const saved=(indentData[dates[0]]||{}).ingredients||{};
+
+  let html=`<div class="highlight">${rangeLabel} &nbsp;|&nbsp; <b>${n}</b> max patients/day &nbsp;|&nbsp; <b>${totalMeals}</b> total meals</div>`;
+  html+=`<div class="card"><h3>🍽️ Meal Summary${nd>1?' (Range Totals)':''}</h3><div class="grid3">
+    ${MEALS.map(meal=>`<div><b style="color:#1a5276">${meal}</b><table style="margin-top:6px"><tr><th>Item</th><th>Count</th></tr>
+      ${Object.entries(mc[meal]).map(([item,cnt])=>`<tr><td>${item}</td><td><b>${cnt}</b></td></tr>`).join('')||'<tr><td colspan="2" style="color:#999">No entries</td></tr>'}
+    </table></div>`).join('')}</div></div>`;
+  html+=`<div class="card"><h3>📦 Ingredient Indent — ${n} patients/day × ${nd} day(s)</h3>
+    <p style="font-size:12px;color:#666;margin-bottom:10px">Edit quantities as needed before printing.</p>
+    <div style="overflow-x:auto"><table class="indent-table"><thead><tr>
+      <th>Category</th><th>Ingredient</th><th>Per Day</th><th>Total (${nd}d)</th><th>Ordered Qty</th><th>Unit</th><th>Remarks</th>
+    </tr></thead><tbody>`;
+  Object.entries(ING_CATS).forEach(([cat,items])=>{
+    items.forEach((item,idx)=>{
+      const unit=item.match(/\(([^)]+)\)/)?.[1]||'';
+      const iname=item.replace(/\([^)]+\)/,'').trim();
+      const perDay=getSuggested(iname,n);
+      const total=perDay?(parseFloat(perDay)*nd).toFixed(String(perDay).includes('.')?1:0):'';
+      const sv=saved[item]||{};
+      html+=`<tr>
+        ${idx===0?`<td rowspan="${items.length}" style="font-weight:700;color:#1a5276;vertical-align:middle">${cat}</td>`:''}
+        <td>${iname}</td>
+        <td style="color:#666">${perDay}</td>
+        <td style="color:#1e8449;font-weight:700">${total}</td>
+        <td><input class="indent-qty" data-item="${item}" value="${sv.qty||total}" style="width:80px"></td>
+        <td>${unit}</td>
+        <td><input class="indent-rem" data-item="${item}" value="${sv.remarks||''}" placeholder="Notes..."></td>
+      </tr>`;
+    });
+  });
+  html+=`</tbody></table></div></div>`;
+  document.getElementById('indentContent').innerHTML=html;
+}
+function saveIndent(){
+  const dates=getDateRange('indentDateFrom','indentDateTo');
+  const dt=dates[0];
+  if(!indentData[dt])indentData[dt]={counts:{},ingredients:{}};
+  document.querySelectorAll('.indent-qty').forEach(el=>{const item=el.dataset.item;if(!indentData[dt].ingredients[item])indentData[dt].ingredients[item]={};indentData[dt].ingredients[item].qty=el.value;});
+  document.querySelectorAll('.indent-rem').forEach(el=>{const item=el.dataset.item;if(!indentData[dt].ingredients[item])indentData[dt].ingredients[item]={};indentData[dt].ingredients[item].remarks=el.value;});
+  save();alert('Indent saved!');
+}
+
+// ===== PRINT =====
+function printRegister(){
+  saveRegisterEdits();
+  const dates=getDateRange('regDateFrom','regDateTo');
+  const from=formatDate(dates[0]),to=formatDate(dates[dates.length-1]);
+  const title=dates.length===1?`DIET REGISTER — ${from}`:`DIET REGISTER — ${from} to ${to}`;
+  document.getElementById('printArea').innerHTML=`
+    <style>body{font-family:Arial,sans-serif;font-size:11px}table{width:100%;border-collapse:collapse}th,td{border:1px solid #333;padding:4px}th{background:#1a5276;color:#fff}.hdr{text-align:center;margin-bottom:10px}select,input{display:none}.ward-header{background:#2e86c1;color:#fff;padding:4px 8px;font-weight:700;margin:6px 0}page-break{page-break-after:always}</style>
+    <div class="hdr"><h2>Jain AGM Ayurvedic Medical College & Hospital</h2><h3>${title}</h3></div>
+    ${document.getElementById('registerContent').innerHTML}`;
+  window.print();
+}
+function printIndent(){
+  saveIndent();
+  const dates=getDateRange('indentDateFrom','indentDateTo');
+  const from=formatDate(dates[0]),to=formatDate(dates[dates.length-1]);
+  const title=dates.length===1?`DIET INDENT — ${from}`:`DIET INDENT — ${from} to ${to}`;
+  document.getElementById('printArea').innerHTML=`
+    <style>body{font-family:Arial,sans-serif;font-size:11px}table{width:100%;border-collapse:collapse}th,td{border:1px solid #333;padding:4px}th{background:#1a5276;color:#fff}.hdr{text-align:center;margin-bottom:10px}input{display:none}</style>
+    <div class="hdr"><h2>Jain AGM Ayurvedic Medical College & Hospital</h2><h3>${title}</h3><p>Generated: ${new Date().toLocaleString('en-IN')}</p></div>
+    ${document.getElementById('indentContent').innerHTML}`;
+  window.print();
+}
+function printMenu(){
+  document.getElementById('printArea').innerHTML=`
+    <style>body{font-family:Arial,sans-serif;font-size:12px}table{width:100%;border-collapse:collapse}th,td{border:1px solid #333;padding:6px}th{background:#1a5276;color:#fff}.hdr{text-align:center;margin-bottom:12px}</style>
+    <div class="hdr"><h2>Jain AGM Ayurvedic Medical College & Hospital</h2><h3>WEEKLY DIET MENU</h3></div>
+    <table><thead><tr><th>Day</th><th>Breakfast</th><th>Lunch</th><th>Dinner</th></tr></thead><tbody>
+    ${DAYS.map(d=>`<tr><td><b>${d}</b></td>${MEALS.map(m=>`<td>${weeklyMenu[d]?.[m]||'-'}</td>`).join('')}</tr>`).join('')}
+    </tbody></table>`;
+  window.print();
+}
+
+// ===== INIT =====
+document.getElementById('dashDate').value=today();
+refreshDashboard();
+</script>
+</body>
+</html>
