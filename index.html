@@ -669,7 +669,7 @@ function renderImpTable(rows) {
     h += '<tr class="imp-row">' +
       '<td><input type="checkbox" class="impChk" checked value="'+i+'" style="width:auto;margin-bottom:0"></td>' +
       '<td>'+r.sl+'</td>' +
-      '<td style="white-space:nowrap;font-size:11px">'+(r.date||'')+'</td>' +
+      '<td style="white-space:nowrap;font-size:11px">'+(r.date||'')+'<input type="hidden" value="'+r.doa+'" data-i="'+i+'" data-f="doa"></td>' +
       '<td><input value="'+r.opd+'" style="width:90px" data-i="'+i+'" data-f="opd"></td>' +
       '<td><input value="'+r.ipd+'" style="width:88px" data-i="'+i+'" data-f="ipd"></td>' +
       '<td><input value="'+r.name+'" style="width:135px" data-i="'+i+'" data-f="name"></td>' +
@@ -695,9 +695,10 @@ function doImport() {
     var idx = chk[ci];
     function gv(ix,f){var x=document.querySelector('input[data-i="'+ix+'"][data-f="'+f+'"]');return x?x.value.trim():'';}
     var name=gv(idx,'name'); var ipd=gv(idx,'ipd');
-    var doa=fixDate(gv(idx,'doa'));
-    var disRaw=gv(idx,'disdate'); var disDate=fixDate(disRaw);
-    if(!doa||doa===today()&&!gv(idx,'doa')) doa=today();
+    // DOA — read from hidden input which holds the parsed yyyy-mm-dd value
+    var doaRaw=gv(idx,'doa');
+    var doa = doaRaw ? fixDate(doaRaw) : reportDate;
+    if (!doa || doa === fixDate('')) doa = reportDate || today();
     if(!disDate||disDate<doa) disDate=addDays(doa,6);
     var ward=(document.querySelector('.iward[data-i="'+idx+'"]')||{}).value||'Kayachikitsa';
     var gender=(document.querySelector('.igen[data-i="'+idx+'"]')||{}).value||'Male';
