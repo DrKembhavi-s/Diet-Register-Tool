@@ -402,16 +402,12 @@ function saveWeeklyMenu() {
 function calcDischarge() { var a=el('pt_adm').value; var n=parseInt(el('pt_days').value)||0; if(a&&n>0) el('pt_dis').value=addDays(a,n-1); }
 
 function genSched(p) {
-  var adm=fixDate(p.admDate)||today();
-  var dis=fixDate(p.disDate)||addDays(adm,89);
-  var admTs=tsOf(adm); var disTs=tsOf(dis);
-  var cur=adm;
-  while(tsOf(cur)<=disTs){
-    var mn=menu[dayName(cur)]||{};
-    if(!schedules[cur]) schedules[cur]={};
-    schedules[cur][p.id]={Breakfast:mn.Breakfast||'',Lunch:mn.Lunch||'',Dinner:mn.Dinner||''};
-    cur=addDays(cur,1);
-    if(tsOf(cur)>disTs) break;
+  var adm = fixDate(p.admDate) || today();
+  for (var i = 0; i < 90; i++) {
+    var dt = addDays(adm, i);
+    var mn = menu[dayName(dt)] || {};
+    if (!schedules[dt]) schedules[dt] = {};
+    schedules[dt][p.id] = { Breakfast: mn.Breakfast||'', Lunch: mn.Lunch||'', Dinner: mn.Dinner||'' };
   }
 }
 
