@@ -187,9 +187,14 @@ tr:hover td{background:#eaf4fb}
     <div id="impDateSec" style="display:none">
       <div class="card" style="background:#f8f9fa;border:1px solid #d6eaf8">
         <h3>📅 Admission Settings</h3>
+        <p style="font-size:12px;color:#555;margin-bottom:10px">
+          This is a <b>Bed Occupancy Report</b> — patients have different admission dates.
+          Set the <b>Report Date</b> (the date on the PDF) as the expected discharge date.
+          Patients will remain visible in the Diet Register until you manually discharge them.
+        </p>
         <div class="grid3">
-          <div><label>Default Days (1-15)</label><input type="number" id="impDays" value="7" min="1" max="15"></div>
-          <div><label>Diet Type</label><input id="impDiet" placeholder="Regular"></div>
+          <div><label>Report Date (PDF Date)</label><input type="date" id="impReportDate"></div>
+          <div><label>Diet Type (default)</label><input id="impDiet" placeholder="Regular"></div>
           <div style="display:flex;align-items:flex-end;padding-bottom:10px">
             <button class="btn btn-warning" onclick="applyDefDays()">Apply to All</button>
           </div>
@@ -207,8 +212,8 @@ tr:hover td{background:#eaf4fb}
         </div>
         <div class="imp-prev">
           <table><thead><tr>
-            <th>✓</th><th>#</th><th>OPD</th><th>IPD</th><th>Name</th><th>Gender</th><th>Age</th>
-            <th>Diagnosis</th><th>DOA</th><th>Ward</th><th>Days</th><th>Diet</th>
+            <th>✓</th><th>Sl</th><th>OPD No</th><th>IP Reg No</th><th>Name</th><th>Gender</th><th>Age</th>
+            <th>Department</th><th>Doctor</th><th>Diagnosis</th><th>Date</th><th>Dis Date</th><th>Diet</th>
           </tr></thead><tbody id="impTbl"></tbody></table>
         </div>
         <div class="flex-end" style="margin-top:10px">
@@ -545,10 +550,14 @@ function parsePdf(text) {
   var rows = [];
   var seen = {};
 
-  // Find all IP numbers
+  // Auto-detect report date from header e.g. "Bed Occupancy On 15.05.2026"
+  var reportDateM = flat.match(/(?:on|between|date)[:\s]+(\d{2}\.\d{2}\.\d{4})/i);
+  var reportDate = reportDateM ? parseDMY(reportDateM[1]) : today();
+  if (el('impReportDate')) el('impReportDate').value = reportDate;
+
+  // Find all IP numbers as anchors
   var ipPat = /\b(IP\d{6,8})\b/g;
-  var ipMatches = [];
-  var im;
+  var ipMatches = []; var im;
   while ((im = ipPat.exec(flat)) !== null) {
     if (!seen[im[1]]) {
       seen[im[1]] = true;
@@ -563,30 +572,37 @@ function parsePdf(text) {
 
   for (var i = 0; i < ipMatches.length; i++) {
     var ipd = ipMatches[i].ipd;
-    var before = flat.substring(Math.max(0, ipMatches[i].index - 120), ipMatches[i].index);
+
+    // Look back for SL NO, DATE, OPD NO
+    var before = flat.substring(Math.max(0, ipMatches[i].index - 150), ipMatches[i].index);
     var opdM = before.match(/(\d{9,12})\s*$/);
     var opd = opdM ? opdM[1] : '';
-    var dateInBefore = before.match(/(\d{2}\.\d{2}\.\d{4})/);
-    var admDateRaw = dateInBefore ? dateInBefore[0] : '';
+    var dateM = before.match(/(\d{2}\.\d{2}\.\d{4})/);
+    var admDateRaw = dateM ? dateM[0] : '';
+    var doa = admDateRaw ? parseDMY(admDateRaw) : reportDate;
 
+    // Segment after IP up to next IP
     var segEnd = ipMatches[i+1] ? ipMatches[i+1].index : flat.length;
     var seg = flat.substring(ipMatches[i].end, segEnd).trim();
 
-    // Gender
+    // NAME — everything before Male/Female
     var gm = seg.match(/\b(Female|Male)\b/i);
     var gender = gm ? gm[0] : 'Male';
     var gi = gm ? seg.indexOf(gm[0]) : -1;
     var name = gi > -1 ? seg.substring(0, gi).trim().replace(/\s+/g, ' ') : '(verify)';
 
-    // Age
+    // AGE — digits right after gender
     var afterG = gi > -1 ? seg.substring(gi + gender.length).trim() : seg;
     var ageM = afterG.match(/^(\d{1,3})\b/);
     var age = ageM ? ageM[1] : '';
     var rem = ageM ? afterG.substring(ageM[0].length).trim() : afterG;
 
-    // Ward from department keywords
-    var ward = 'Kayachikitsa';
-    var depts = ['KAYA CHIKITSA','SHALYA TANTRA','SHALAKYA TANTRA','PANCHA KARMA','KAUMARA BRUTYA','KAUMARA BHRITYA','PRASOOTI TANTRA','PRASUTI TANTRA'];
+    // DEPARTMENT — find known dept keywords, map to ward
+    var depts = [
+      'KAYA CHIKITSA','SHALYA TANTRA','SHALAKYA TANTRA',
+      'PANCHA KARMA','KAUMARA BRUTYA','KAUMARA BHRITYA',
+      'PRASOOTI TANTRA','PRASUTI TANTRA'
+    ];
     var bestIdx = -1; var bestDept = '';
     for (var dp = 0; dp < depts.length; dp++) {
       var dpi = rem.toUpperCase().indexOf(depts[dp]);
@@ -594,32 +610,39 @@ function parsePdf(text) {
         bestIdx = dpi; bestDept = depts[dp];
       }
     }
-    if (bestDept) ward = mapDept(bestDept);
+    var ward = bestDept ? mapDept(bestDept) : 'Kayachikitsa';
 
-    // DOA — last date in segment
-    var allDates = rem.match(/\d{2}\.\d{2}\.\d{4}/g) || [];
-    var doa = allDates.length ? parseDMY(allDates[allDates.length - 1]) : parseDMY(admDateRaw);
-    if (!doa) doa = today();
+    // DOCTOR — text after dept that matches "DR..." pattern, strip it out
+    var afterDept = bestIdx > -1 ? rem.substring(bestIdx + bestDept.length).trim() : rem;
+    var doctorM = afterDept.match(/^(DR\.?\s+[A-Za-z\s]{2,40}?)(?=[A-Z][a-z]|[A-Z]{2,}|\d)/i);
+    var doctor = doctorM ? doctorM[1].trim() : '';
+    var afterDoctor = doctor ? afterDept.substring(doctor.length).trim() : afterDept;
 
-    // Diagnosis — text after dept keyword, before last date, stripping DR names
-    var diag = '';
-    if (bestIdx > -1) {
-      var afterDept = rem.substring(bestIdx + bestDept.length).trim();
-      afterDept = afterDept.replace(/\bDR\.?\s+[A-Z][A-Za-z\s]{1,25}/g, '').trim();
-      var lastDateStr = allDates.length ? allDates[allDates.length - 1] : '';
-      var diagEnd = lastDateStr ? afterDept.lastIndexOf(lastDateStr) : afterDept.length;
-      if (diagEnd < 0) diagEnd = afterDept.length;
-      diag = afterDept.substring(0, diagEnd).replace(/\bDOD\b/gi,'').trim().replace(/\s+/g,' ');
-      if (diag.length > 60) diag = diag.substring(0, 60);
-    }
+    // DIAGNOSIS — everything remaining, but STOP before any date (DOA/DOD)
+    var diagRaw = afterDoctor.replace(/\b\d{2}\.\d{2}\.\d{4}\b.*/g, '').trim();
+    // Also strip trailing DOD label
+    diagRaw = diagRaw.replace(/\bDOD\b.*/gi, '').trim();
+    var diag = diagRaw.replace(/\s+/g, ' ').substring(0, 80).trim();
 
-    rows.push({sl: i+1, opd: opd, ipd: ipd, name: name, gender: gender, age: age, diag: diag, doa: doa, ward: ward});
+    rows.push({
+      sl: i + 1,
+      opd: opd,
+      ipd: ipd,
+      name: name,
+      gender: gender,
+      age: age,
+      department: bestDept || '',
+      doctor: doctor,
+      diag: diag,
+      doa: doa,
+      ward: ward
+    });
   }
 
   if (!rows.length) { setPdfStatus('Could not extract patient details.', 'se'); return; }
 
   impRows = rows;
-  el('wardMapRows').innerHTML = '<div class="wmap-row"><b>Ward auto-detected per patient from DEPARTMENT column. Edit in preview if needed.</b></div>';
+  el('wardMapRows').innerHTML = '<div class="wmap-row"><b>Ward auto-detected per patient from DEPARTMENT column. Edit if needed.</b></div>';
   el('wardMapSec').style.display = 'block';
   el('impDateSec').style.display = 'block';
   renderImpTable(rows);
@@ -629,14 +652,15 @@ function parsePdf(text) {
 }
 
 function applyDefDays() {
-  var d = parseInt(el('impDays').value) || 7;
+  var reportDate = el('impReportDate').value || today();
   var dt = el('impDiet').value || 'Regular';
-  document.querySelectorAll('.idays').forEach(function(x) { x.value = d; });
+  // Set all discharge dates to the report date
+  document.querySelectorAll('.idisdate').forEach(function(x) { x.value = reportDate; });
   document.querySelectorAll('.idiet').forEach(function(x) { x.value = dt; });
 }
 
 function renderImpTable(rows) {
-  var dd = parseInt((el('impDays') || {}).value) || 7;
+  var reportDate = el('impReportDate') ? el('impReportDate').value : today();
   var h = '';
   for (var i = 0; i < rows.length; i++) {
     var r = rows[i];
@@ -647,16 +671,17 @@ function renderImpTable(rows) {
     h += '<tr class="imp-row">' +
       '<td><input type="checkbox" class="impChk" checked value="' + i + '" style="width:auto;margin-bottom:0"></td>' +
       '<td>' + r.sl + '</td>' +
-      '<td><input value="' + r.opd + '" style="width:100px" data-i="' + i + '" data-f="opd"></td>' +
+      '<td><input value="' + r.opd + '" style="width:95px" data-i="' + i + '" data-f="opd"></td>' +
       '<td><input value="' + r.ipd + '" style="width:90px" data-i="' + i + '" data-f="ipd"></td>' +
       '<td><input value="' + r.name + '" style="width:140px" data-i="' + i + '" data-f="name"></td>' +
-      '<td><select class="igen" data-i="' + i + '" style="width:75px;margin-bottom:0"><option' + (r.gender==='Male'?' selected':'') + '>Male</option><option' + (r.gender==='Female'?' selected':'') + '>Female</option></select></td>' +
-      '<td><input value="' + r.age + '" style="width:38px" data-i="' + i + '" data-f="age"></td>' +
+      '<td><select class="igen" data-i="' + i + '" style="width:70px;margin-bottom:0"><option' + (r.gender==='Male'?' selected':'') + '>Male</option><option' + (r.gender==='Female'?' selected':'') + '>Female</option></select></td>' +
+      '<td><input value="' + r.age + '" style="width:35px" data-i="' + i + '" data-f="age"></td>' +
+      '<td><select class="iward" data-i="' + i + '" style="width:150px;margin-bottom:0">' + wo + '</select></td>' +
+      '<td><input value="' + (r.doctor||'') + '" style="width:120px" data-i="' + i + '" data-f="doctor"></td>' +
       '<td><input value="' + r.diag + '" style="width:120px" data-i="' + i + '" data-f="diag"></td>' +
       '<td><input type="date" value="' + r.doa + '" style="width:125px" data-i="' + i + '" data-f="doa"></td>' +
-      '<td><select class="iward" data-i="' + i + '" style="width:150px;margin-bottom:0">' + wo + '</select></td>' +
-      '<td><input type="number" class="idays" value="' + dd + '" min="1" max="15" style="width:42px" data-i="' + i + '"></td>' +
-      '<td><input class="idiet" value="Regular" style="width:85px" data-i="' + i + '"></td>' +
+      '<td><input type="date" class="idisdate" value="' + reportDate + '" style="width:125px" data-i="' + i + '" data-f="disdate"></td>' +
+      '<td><input class="idiet" value="Regular" style="width:80px" data-i="' + i + '"></td>' +
       '</tr>';
   }
   el('impTbl').innerHTML = h;
@@ -673,8 +698,12 @@ function doImport() {
     function gv(idx2, f) { var x = document.querySelector('input[data-i="' + idx2 + '"][data-f="' + f + '"]'); return x ? x.value.trim() : ''; }
     var name = gv(idx, 'name'); var ipd = gv(idx, 'ipd');
     var doaRaw = gv(idx, 'doa');
-    var doa = fixDate(doaRaw) || today();
-    var days = parseInt((document.querySelector('.idays[data-i="' + idx + '"]') || {}).value) || 7;
+        var doa = fixDate(doaRaw) || today();
+    // Get discharge date from the disdate input (set to report date by default)
+    var disDRaw = gv(idx, 'disdate');
+    var disDate = fixDate(disDRaw) || today();
+    // Make sure disDate is not before admDate
+    if (disDate < doa) disDate = addDays(doa, 6);
     var ward = (document.querySelector('.iward[data-i="' + idx + '"]') || {}).value || 'Kayachikitsa';
     var gender = (document.querySelector('.igen[data-i="' + idx + '"]') || {}).value || '';
     var diet = (document.querySelector('.idiet[data-i="' + idx + '"]') || {}).value || 'Regular';
@@ -682,12 +711,13 @@ function doImport() {
     var dup = false;
     for (var pi = 0; pi < patients.length; pi++) { if (patients[pi].ipd === ipd && patients[pi].admitted) { dup = true; break; } }
     if (dup) { sk++; continue; }
+    var days = Math.round((new Date(disDate+'T00:00:00') - new Date(doa+'T00:00:00')) / (1000*60*60*24)) + 1;
     var p = {
       id: Date.now().toString() + '_' + idx,
       name: name, ipd: ipd, opd: gv(idx, 'opd'), ward: ward,
       bed: gv(idx, 'bed'), age: gv(idx, 'age') + (gender ? ' / ' + gender : ''),
       diag: gv(idx, 'diag'), dietType: diet,
-      admDate: doa, disDate: addDays(doa, days - 1),
+      admDate: doa, disDate: disDate,
       days: days, admitted: true
     };
     patients.push(p); genSched(p); ok++;
