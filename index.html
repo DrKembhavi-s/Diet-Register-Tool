@@ -576,13 +576,28 @@ function parsePdf(text) {
   for (var i = 0; i < ipMatches.length; i++) {
     var ipd = ipMatches[i].ipd;
 
-    // Before IP: date and OPD number
-    var before = flat.substring(Math.max(0,ipMatches[i].index-160), ipMatches[i].index);
-    var opdM = before.match(/(\d{7,12})\s*$/); var opd = opdM ? opdM[1] : '';
-    // First date in before-segment = admission date (SL DATE OPD IP...)
-    var dateArr = before.match(/\d{1,2}\.\d{2}\.\d{2,4}/g);
-    var admDateRaw = dateArr ? dateArr[0] : '';
-    var doa = admDateRaw ? parseDMY(admDateRaw) : reportDate;
+    // Before IP: look for OPD number and admission date
+    // The row format is: SL  DATE  OPD  IP...
+    // So before IP we have: ...SL DATE OPD
+    var before = flat.substring(Math.max(0,ipMatches[i].index-200), ipMatches[i].index);
+
+    // OPD = last long number before IP
+    var opdM = before.match(/(\d{7,12})\s*$/);
+    var opd = opdM ? opdM[1] : '';
+
+    // Admission date = the date that appears just before the OPD number
+    // Strip the OPD number from end, then find the last date
+    var beforeOpd = opdM ? before.substring(0, before.lastIndexOf(opdM[1])) : before;
+    var dateArr = beforeOpd.match(/\d{1,2}\.\d{2}\.\d{2,4}/g);
+    var admDateRaw = dateArr ? dateArr[dateArr.length - 1] : '';
+    var doa = admDateRaw ? parseDMY(admDateRaw) : '';
+
+    // If still empty, try the full before segment
+    if (!doa) {
+      var allDatesInBefore = before.match(/\d{1,2}\.\d{2}\.\d{2,4}/g);
+      admDateRaw = allDatesInBefore ? allDatesInBefore[0] : '';
+      doa = admDateRaw ? parseDMY(admDateRaw) : reportDate;
+    }
 
     // Segment after IP to next IP
     var segEnd = ipMatches[i+1] ? ipMatches[i+1].index : flat.length;
