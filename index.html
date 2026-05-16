@@ -620,14 +620,21 @@ function renderRegister(){
   var dt=el('regFrom').value||today();
   var wf=el('regWard').value||'';
   var dayPts=[];
+  var debugInfo='<div style="background:#fff3cd;padding:10px;margin-bottom:10px;font-size:12px;border-radius:6px">';
+  debugInfo+='<b>Debug Info:</b><br>';
+  debugInfo+='Selected date: <b>'+dt+'</b><br>';
+  debugInfo+='Total patients in system: <b>'+patients.length+'</b><br>';
   for(var i=0;i<patients.length;i++){
     var p=patients[i];
+    debugInfo+='Patient: '+p.name+' | admitted:'+p.admitted+' | admDate:'+p.admDate+' | disDate:'+p.disDate+' | ward:'+p.ward+'<br>';
     if(p.admitted && p.admDate<=dt && p.disDate>=dt && (!wf||p.ward===wf)){
       dayPts.push(p);
     }
   }
+  debugInfo+='Matched patients: <b>'+dayPts.length+'</b></div>';
+
   if(!dayPts.length){
-    el('regContent').innerHTML='<p style="color:#999;padding:20px;text-align:center">No patients admitted on '+fmtD(dt)+'.</p>';
+    el('regContent').innerHTML=debugInfo+'<p style="color:#999;padding:20px;text-align:center">No patients admitted on '+fmtD(dt)+'.</p>';
     return;
   }
   var out='<div class="hl">📅 <b>'+fmtD(dt)+'</b> ('+dayName(dt)+') — <b>'+dayPts.length+'</b> patients | <b>'+(dayPts.length*3)+'</b> meals</div>';
