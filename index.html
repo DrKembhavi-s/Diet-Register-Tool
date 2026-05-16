@@ -579,8 +579,9 @@ function parsePdf(text) {
     // Before IP: date and OPD number
     var before = flat.substring(Math.max(0,ipMatches[i].index-160), ipMatches[i].index);
     var opdM = before.match(/(\d{7,12})\s*$/); var opd = opdM ? opdM[1] : '';
+    // First date in before-segment = admission date (SL DATE OPD IP...)
     var dateArr = before.match(/\d{1,2}\.\d{2}\.\d{2,4}/g);
-    var admDateRaw = dateArr ? dateArr[dateArr.length-1] : '';
+    var admDateRaw = dateArr ? dateArr[0] : '';
     var doa = admDateRaw ? parseDMY(admDateRaw) : reportDate;
 
     // Segment after IP to next IP
