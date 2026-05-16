@@ -584,33 +584,96 @@ function rsc(dt,pid,ml,val){
   if(t)t.value=(val==='__c'?'':val);
 }
 function renderRegister(){
-  var dates=getRange('regFrom','regTo');
-  var wf=el('regWard').value;
-  var html='';
-  dates.forEach(function(dt){
-    var pts=patients.filter(function(p){return p.admitted&&p.admDate<=dt&&p.disDate>=dt&&(!wf||p.ward===wf);});
-    if(!pts.length)return;
-    var byW={};
-    pts.forEach(function(p){if(!byW[p.ward])byW[p.ward]=[];byW[p.ward].push(p);});
-    html+='<div class="day-block"><div class="day-block-hdr">📅 '+fmtD(dt)+' — '+dayName(dt)+' | '+pts.length+' patients | '+(pts.length*3)+' meals</div><div style="padding:10px">';
-    Object.keys(byW).forEach(function(ward){
-      html+='<div style="margin-bottom:14px"><div class="ward-hdr">🏥 '+ward+' — '+byW[ward].length+' patient(s)</div>';
-      html+='<div style="overflow-x:auto"><table><thead><tr><th>#</th><th>IPD</th><th>Name</th><th>Age/Gender</th><th>Diagnosis</th><th>Diet Type</th><th>Breakfast</th><th>Lunch</th><th>Dinner</th></tr></thead><tbody>';
-      byW[ward].forEach(function(p,i){
-        var s=(schedules[dt]&&schedules[dt][p.id])||{Breakfast:'',Lunch:'',Dinner:''};
-        html+='<tr><td>'+(i+1)+'</td><td><b>'+p.ipd+'</b></td><td>'+p.name+'</td><td>'+(p.age||'-')+'</td><td>'+(p.diag||'-')+'</td><td>'+(p.dietType||'Regular')+'</td>';
-        MEALS.forEach(function(ml){
-          var cv=s[ml]&&SI[ml].indexOf(s[ml])===-1?s[ml]:'';
-          var sid='r_'+dt+'_'+p.id+'_'+ml;
-          html+='<td class="meal-cell"><select id="'+sid+'" onchange="rsc(\''+dt+'\',\''+p.id+'\',\''+ml+'\',this.value)">'+getMOpts(ml,s[ml])+'</select><input id="'+sid+'_t" class="ci" placeholder="Custom..." value="'+cv+'"></td>';
-        });
-        html+='</tr>';
-      });
-      html+='</tbody></table></div></div>';
-    });
-    html+='</div></div>';
-  });
-  el('regContent').innerHTML=html||'<p style="color:#999;text-align:center;padding:20px">No admitted patients for this date range.</p>';
+  try {
+    var from = el('regFrom').value;
+    var to = el('regTo').value;
+    if(!from){ alert('Please select a From Date.'); return; }
+    if(!to) to = from;
+    if(to < from) to = from;
+    var wf = el('regWard').value;
+
+    // Limit range to 31 days max to prevent browser freeze
+    var fromD = new Date(from+'T00:00:00');
+    var toD = new Date(to+'T00:00:00');
+    var diffDays = Math.round((toD - fromD)/(1000*60*60*24));
+    if(diffDays > 31){ alert('Please select a date range of 31 days or less.'); return; }
+
+    var dates = [];
+    var cur = from;
+    while(cur <= to){ dates.push(cur); cur = addDays(cur,1); }
+
+    var html = '';
+    for(var di=0; di<dates.length; di++){
+      var dt = dates[di];
+      var pts = [];
+      for(var pi=0; pi<patients.length; pi++){
+        var p = patients[pi];
+        if(p.admitted && p.admDate <= dt && p.disDate >= dt && (!wf || p.ward === wf)){
+          pts.push(p);
+        }
+      }
+      if(!pts.length) continue;
+
+      // Group by ward
+      var byW = {};
+      for(var bi=0; bi<pts.length; bi++){
+        var pw = pts[bi].ward;
+        if(!byW[pw]) byW[pw] = [];
+        byW[pw].push(pts[bi]);
+      }
+
+      html += '<div class="day-block">';
+      html += '<div class="day-block-hdr">📅 '+fmtD(dt)+' — '+dayName(dt)+' | '+pts.length+' patients | '+(pts.length*3)+' meals</div>';
+      html += '<div style="padding:10px">';
+
+      var wardKeys = Object.keys(byW);
+      for(var wi=0; wi<wardKeys.length; wi++){
+        var ward = wardKeys[wi];
+        var wpts = byW[ward];
+        html += '<div style="margin-bottom:14px">';
+        html += '<div class="ward-hdr">🏥 '+ward+' — '+wpts.length+' patient(s)</div>';
+        html += '<div style="overflow-x:auto"><table><thead><tr>';
+        html += '<th>#</th><th>IPD</th><th>Name</th><th>Age/Gender</th><th>Diagnosis</th><th>Diet</th>';
+        html += '<th>Breakfast</th><th>Lunch</th><th>Dinner</th></tr></thead><tbody>';
+
+        for(var pti=0; pti<wpts.length; pti++){
+          var pt = wpts[pti];
+          var sch = (schedules[dt] && schedules[dt][pt.id]) || {Breakfast:'',Lunch:'',Dinner:''};
+          html += '<tr>';
+          html += '<td>'+(pti+1)+'</td>';
+          html += '<td><b>'+pt.ipd+'</b></td>';
+          html += '<td>'+pt.name+'</td>';
+          html += '<td>'+(pt.age||'-')+'</td>';
+          html += '<td>'+(pt.diag||'-')+'</td>';
+          html += '<td>'+(pt.dietType||'Regular')+'</td>';
+
+          for(var mi=0; mi<MEALS.length; mi++){
+            var ml = MEALS[mi];
+            var sv = sch[ml] || '';
+            var isCustom = sv && SI[ml].indexOf(sv) === -1;
+            var sid = 'r_'+dt+'_'+pt.id+'_'+ml;
+            html += '<td class="meal-cell">';
+            html += '<select id="'+sid+'" onchange="rsc(\''+dt+'\',\''+pt.id+'\',\''+ml+'\',this.value)">';
+            html += '<option value="">-- Select --</option>';
+            for(var oi=0; oi<SI[ml].length; oi++){
+              html += '<option'+(sv===SI[ml][oi]?' selected':'')+'>'+SI[ml][oi]+'</option>';
+            }
+            html += '<option value="__c"'+(isCustom?' selected':'')+'>Custom...</option>';
+            html += '</select>';
+            html += '<input id="'+sid+'_t" class="ci" placeholder="Custom..." value="'+(isCustom?sv:'')+'">';
+            html += '</td>';
+          }
+          html += '</tr>';
+        }
+        html += '</tbody></table></div></div>';
+      }
+      html += '</div></div>';
+    }
+
+    el('regContent').innerHTML = html || '<p style="color:#999;text-align:center;padding:20px">No admitted patients found for this date range and ward.</p>';
+  } catch(e) {
+    el('regContent').innerHTML = '<p style="color:#c0392b;padding:20px">Error rendering register: '+e.message+'</p>';
+  }
 }
 function saveRegister(){
   var dates=getRange('regFrom','regTo');
