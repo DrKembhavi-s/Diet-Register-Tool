@@ -556,35 +556,104 @@ function detectWard(text) {
 }
 function parseAndPreview(text) {
   detectedWard = detectWard(text);
-  var lines = text.split(/[\n\r]+/).map(function(l) { return l.trim(); }).filter(function(l) { return l.length > 2; });
+
+  // Step 1: flatten all text into one long string (PDF lines are unreliable)
+  var flat = text.replace(/[\r\n]+/g, ' ').replace(/\s{2,}/g, ' ');
+
   var rows = [];
-  for (var i = 0; i < lines.length; i++) {
-    var line = lines[i];
-    var sm = line.match(/^(\d+)\s+([\d.]+)\s+(\d{9,12})\s+(IP\d+)\s+(.+)/i);
-    if (!sm) continue;
-    var rest = sm[5];
-    var gm = rest.match(/\b(Male|Female)\b/i);
-    if (!gm) continue;
-    var gi = rest.indexOf(gm[0]);
-    var name = rest.substring(0, gi).trim().replace(/\s+/g, ' ');
-    var after = rest.substring(gi + gm[0].length).trim();
-    var am = after.match(/^(\d{1,3})\s*(.*)/);
-    var age = am ? am[1] : '';
-    var rem = am ? am[2].trim() : '';
-    var dm = rem.match(/(\d{2}\.\d{2}\.\d{4})/);
-    var diag = '', doa = '';
-    if (dm) {
-      var di = rem.indexOf(dm[0]);
-      var before = rem.substring(0, di).trim().split(/\s+/);
-      var dt = [], inA = false;
-      before.forEach(function(t) { if (!inA && /^[A-Z]+$/.test(t) && t.length > 1) dt.push(t); else inA = true; });
-      diag = dt.join(' ') || rem.substring(0, di).trim();
-      doa = parseDMY(dm[0]);
-    }
-    var bm = rem.match(/([A-Z]{2}\d{3,4})\s*$/);
-    rows.push({ sl: sm[1], opd: sm[3], ipd: sm[4], name: name, gender: gm[0], age: age, diag: diag, doa: doa || parseDMY(sm[2]), bed: bm ? bm[1] : '', ward: detectedWard });
+
+  // Step 2: Find all IP registration numbers as anchors
+  // Format from your PDF: SL DATE OPD IP NAME GENDER AGE DIAGNOSIS ADDRESS DOA [DOD] BED
+  // We split the flat text on each serial number + date pattern
+  // Pattern: one or more digits (SL), then a date dd.mm.yyyy, then OPD no, then IP number
+  var slPattern = /(\d{1,3})\s+(\d{2}\.\d{2}\.\d{4})\s+(\d{9,12})\s+(IP\d{6,8})\s+/gi;
+  var matches = [];
+  var m;
+  while ((m = slPattern.exec(flat)) !== null) {
+    matches.push({ index: m.index, end: m.index + m[0].length, sl: m[1], date: m[2], opd: m[3], ipd: m[4] });
   }
-  if (!rows.length) { setStatus('Could not extract patient rows. Please check the PDF format.', 'error'); return; }
+
+  if (!matches.length) {
+    // Fallback: try to find IP numbers alone
+    var ipPattern = /\b(IP\d{6,8})\b/gi;
+    var ipm;
+    while ((ipm = ipPattern.exec(flat)) !== null) {
+      matches.push({ index: ipm.index, end: ipm.index + ipm[0].length, sl: matches.length + 1, date: '', opd: '', ipd: ipm[1] });
+    }
+  }
+
+  if (!matches.length) {
+    setStatus('Could not find any patient records (IP numbers) in this PDF. Please verify it is a Bed Occupancy report.', 'error');
+    return;
+  }
+
+  // Step 3: For each match, extract the segment up to the next match
+  for (var i = 0; i < matches.length; i++) {
+    var seg = flat.substring(matches[i].end, matches[i + 1] ? matches[i + 1].index : flat.length).trim();
+
+    // Extract Gender
+    var gm = seg.match(/\b(Male|Female)\b/i);
+    var gender = gm ? gm[0] : '';
+    var gi = gm ? seg.indexOf(gm[0]) : -1;
+
+    // Name is everything before Gender
+    var name = gi > -1 ? seg.substring(0, gi).trim().replace(/\s+/g, ' ') : '';
+
+    // After gender: age then rest
+    var afterGender = gi > -1 ? seg.substring(gi + gender.length).trim() : seg;
+    var ageM = afterGender.match(/^(\d{1,3})\s+(.*)/);
+    var age = ageM ? ageM[1] : '';
+    var rem = ageM ? ageM[2].trim() : afterGender;
+
+    // Find DOA (date dd.mm.yyyy) in remaining
+    var dates = rem.match(/\d{2}\.\d{2}\.\d{4}/g) || [];
+    var doa = dates.length > 0 ? parseDMY(dates[0]) : parseDMY(matches[i].date);
+    var doaRaw = dates.length > 0 ? dates[0] : '';
+
+    // Bed number: KC/ST/SK/PK/KB/PS followed by digits
+    var bedM = rem.match(/\b([A-Z]{2,3}\d{2,4})\b(?!.*\b[A-Z]{2,3}\d{2,4}\b)/);
+    var bed = bedM ? bedM[1] : '';
+
+    // Diagnosis: uppercase words between age and address/DOA
+    // Take text before the first date or before the bed number
+    var diagEnd = doaRaw ? rem.indexOf(doaRaw) : (bed ? rem.indexOf(bed) : rem.length);
+    if (diagEnd < 0) diagEnd = rem.length;
+    var diagSrc = rem.substring(0, diagEnd).trim();
+    // Split into tokens and take consecutive UPPERCASE tokens as diagnosis
+    var tokens = diagSrc.split(/\s+/);
+    var diagTokens = [];
+    var inAddr = false;
+    tokens.forEach(function(t) {
+      if (!inAddr && t.length > 1 && /^[A-Z][A-Z\s]*$/.test(t)) {
+        diagTokens.push(t);
+      } else if (diagTokens.length > 0) {
+        inAddr = true;
+      }
+    });
+    var diag = diagTokens.join(' ').trim() || diagSrc.substring(0, 40).trim();
+
+    // Only add if we have at minimum an IPD and name or gender
+    if (matches[i].ipd && (name || gender)) {
+      rows.push({
+        sl: matches[i].sl,
+        opd: matches[i].opd,
+        ipd: matches[i].ipd,
+        name: name || '(check PDF)',
+        gender: gender || 'Male',
+        age: age,
+        diag: diag,
+        doa: doa,
+        bed: bed,
+        ward: detectedWard
+      });
+    }
+  }
+
+  if (!rows.length) {
+    setStatus('Could not extract patient details. Please verify the PDF is a Jain AGM Bed Occupancy report.', 'error');
+    return;
+  }
+
   importedRows = rows;
   var opts = WARDS.map(function(w) { return '<option' + (w === detectedWard ? ' selected' : '') + '>' + w + '</option>'; }).join('');
   document.getElementById('wardMappingRows').innerHTML = '<div class="ward-map-row"><span style="font-weight:600;min-width:180px">Detected: <b>' + detectedWard + '</b></span><span>Map to:</span><select id="wardMapSelect">' + opts + '</select><button class="btn btn-warning btn-sm" onclick="applyWardMapping()">Apply</button></div>';
