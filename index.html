@@ -593,15 +593,39 @@ function doImport(){
   var ok=0,sk=0;
   chk.forEach(function(idx){
     function gv(f){var x=document.querySelector('input[data-i="'+idx+'"][data-f="'+f+'"]');return x?x.value.trim():'';}
-    var name=gv('name'),ipd=gv('ipd'),doa=gv('doa');
+    var name=gv('name'),ipd=gv('ipd');
     var days=parseInt((document.querySelector('.idays[data-i="'+idx+'"]')||{}).value)||7;
     var ward=(document.querySelector('.iward[data-i="'+idx+'"]')||{}).value||detWard;
     var gender=(document.querySelector('.igen[data-i="'+idx+'"]')||{}).value||'';
     var diet=(document.querySelector('.idiet[data-i="'+idx+'"]')||{}).value||'Regular';
     if(!name||!ipd){sk++;return;}
-    if(!doa||doa.length<10)doa=today();
     if(patients.find(function(p){return p.ipd===ipd&&p.admitted;})){sk++;return;}
-    var p={id:Date.now().toString()+'_'+idx,name:name,ipd:ipd,opd:gv('opd'),ward:ward,bed:gv('bed'),age:gv('age')+(gender?' / '+gender:''),diag:gv('diag'),dietType:diet,admDate:doa,disDate:addDays(doa,days-1),days:days,admitted:true};
+
+    // Get DOA from the date input — it will be in yyyy-mm-dd from the date picker
+    var doaRaw=gv('doa');
+    // If empty or invalid, use today
+    var doa=today();
+    if(doaRaw && doaRaw.length>=8){
+      // Check if it came through as dd.mm.yyyy and convert
+      var ddmmyyyy=doaRaw.match(/^(\d{1,2})[.\-\/](\d{1,2})[.\-\/](\d{4})$/);
+      if(ddmmyyyy){
+        doa=ddmmyyyy[3]+'-'+ddmmyyyy[2].padStart(2,'0')+'-'+ddmmyyyy[1].padStart(2,'0');
+      } else {
+        doa=doaRaw; // already yyyy-mm-dd from date input
+      }
+    }
+
+    var disDate=addDays(doa,days-1);
+    var p={
+      id:Date.now().toString()+'_'+idx,
+      name:name,ipd:ipd,opd:gv('opd'),ward:ward,
+      bed:gv('bed'),
+      age:gv('age')+(gender?' / '+gender:''),
+      diag:gv('diag'),dietType:diet,
+      admDate:doa,      // always yyyy-mm-dd
+      disDate:disDate,  // always yyyy-mm-dd
+      days:days,admitted:true
+    };
     patients.push(p); genSched(p); ok++;
   });
   saveAll();
@@ -610,7 +634,7 @@ function doImport(){
     el('impDateSec').style.display='none';
     el('impPrevSec').style.display='none';
     el('pdfFile').value='';
-    setPdfStatus(ok+' patient(s) imported! Now click the Patients or Diet Register tab.','ss');
+    setPdfStatus(ok+' patient(s) imported! Now click the Diet Register tab, select the admission date and click View.','ss');
   }
   alert(ok+' patient(s) imported.'+(sk?' '+sk+' skipped.':''));
 }
@@ -775,12 +799,33 @@ function printMenu(){
 
 // ======== INIT — runs after page fully loaded ========
 window.onload = function(){
-  el('dashDate').value = today();
-  el('pdfFile').addEventListener('change', function(){
+  // Fix any patients already saved with dd.mm.yyyy date format
+  var fixed=0;
+  for(var i=0;i<patients.length;i++){
+    var p=patients[i];
+    var admFix=fixDate(p.admDate);
+    var disFix=fixDate(p.disDate);
+    if(admFix!==p.admDate||disFix!==p.disDate){
+      p.admDate=admFix; p.disDate=disFix; fixed++;
+    }
+  }
+  if(fixed>0){ saveAll(); }
+  el('dashDate').value=today();
+  el('pdfFile').addEventListener('change',function(){
     if(this.files&&this.files[0]) handlePdfFile(this.files[0]);
   });
   refreshDashboard();
 };
+// Convert any date format to yyyy-mm-dd
+function fixDate(s){
+  if(!s)return today();
+  // already yyyy-mm-dd
+  if(/^\d{4}-\d{2}-\d{2}$/.test(s))return s;
+  // dd.mm.yyyy or dd/mm/yyyy or dd-mm-yyyy
+  var m=s.match(/^(\d{1,2})[.\-\/](\d{1,2})[.\-\/](\d{4})$/);
+  if(m)return m[3]+'-'+m[2].padStart(2,'0')+'-'+m[1].padStart(2,'0');
+  return today();
+}
 </script>
 </body>
 </html>
