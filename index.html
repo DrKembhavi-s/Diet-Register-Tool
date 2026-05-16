@@ -212,8 +212,8 @@ tr:hover td{background:#eaf4fb}
         </div>
         <div class="imp-prev">
           <table><thead><tr>
-            <th>✓</th><th>Sl</th><th>OPD No</th><th>IP Reg No</th><th>Name</th><th>Gender</th><th>Age</th>
-            <th>Department</th><th>Doctor</th><th>Diagnosis</th><th>Date</th><th>Dis Date</th><th>Diet</th>
+            <th>✓</th><th>Sl</th><th>Date</th><th>OP Reg No</th><th>IP Reg No</th><th>Name</th><th>Sex</th><th>Age</th>
+            <th>Dept→Ward</th><th>Doctor</th><th>Diagnosis</th><th>Dis Date</th><th>Diet</th>
           </tr></thead><tbody id="impTbl"></tbody></table>
         </div>
         <div class="flex-end" style="margin-top:10px">
@@ -545,19 +545,56 @@ function handlePdfFile(file) {
   });
 }
 
+function parseDMY(s) {
+  if (!s) return '';
+  // Handle dd.mm.yy (2-digit year)
+  var m2 = s.match(/^(\d{1,2})[.\-\/](\d{1,2})[.\-\/](\d{2})$/);
+  if (m2) return '20' + m2[3] + '-' + m2[2].padStart(2,'0') + '-' + m2[1].padStart(2,'0');
+  // Handle dd.mm.yyyy (4-digit year)
+  var m4 = s.match(/^(\d{1,2})[.\-\/](\d{1,2})[.\-\/](\d{4})$/);
+  if (m4) return m4[3] + '-' + m4[2].padStart(2,'0') + '-' + m4[1].padStart(2,'0');
+  return '';
+}
+
 function parsePdf(text) {
   var flat = text.replace(/\s{2,}/g, ' ').trim();
   var rows = [];
   var seen = {};
 
-  // Auto-detect report date from header e.g. "Bed Occupancy On 15.05.2026"
-  var reportDateM = flat.match(/(?:on|between|date)[:\s]+(\d{2}\.\d{2}\.\d{4})/i);
-  var reportDate = reportDateM ? parseDMY(reportDateM[1]) : today();
+  // Dept code to ward mapping (short codes from this PDF format)
+  var DEPT_CODES = {
+    'KC': 'Kayachikitsa', 'KAYA': 'Kayachikitsa', 'KAYA CHIKITSA': 'Kayachikitsa',
+    'ST': 'Shalya Tantra', 'SHALYA': 'Shalya Tantra', 'SHALYA TANTRA': 'Shalya Tantra',
+    'SK': 'Shalakya Tantra', 'SHALAKYA': 'Shalakya Tantra', 'SHALAKYA TANTRA': 'Shalakya Tantra',
+    'PK': 'Panchakarma', 'PANCHA KARMA': 'Panchakarma', 'PANCHAKARMA': 'Panchakarma',
+    'KB': 'Kaumara Bhritya', 'KAUMARA': 'Kaumara Bhritya', 'KAUMARA BRUTYA': 'Kaumara Bhritya', 'KAUMARA BHRITYA': 'Kaumara Bhritya',
+    'PT': 'Prasuti Tantra & Stri Roga', 'PS': 'Prasuti Tantra & Stri Roga',
+    'PRASUTI': 'Prasuti Tantra & Stri Roga', 'PRASOOTI': 'Prasuti Tantra & Stri Roga',
+    'PRASOOTI TANTRA': 'Prasuti Tantra & Stri Roga', 'PRASUTI TANTRA': 'Prasuti Tantra & Stri Roga'
+  };
+
+  function resolveWard(code) {
+    if (!code) return 'Kayachikitsa';
+    var upper = code.trim().toUpperCase();
+    return DEPT_CODES[upper] || 'Kayachikitsa';
+  }
+
+  // Auto-detect report date from header
+  // Handles "Between dd.mm.yyyy and dd.mm.yyyy" or "On dd.mm.yyyy"
+  var reportDate = today();
+  var rng = flat.match(/between\s+(\d{1,2}\.\d{2}\.\d{2,4})\s+and\s+(\d{1,2}\.\d{2}\.\d{2,4})/i);
+  if (rng) {
+    reportDate = parseDMY(rng[2]) || parseDMY(rng[1]) || today();
+  } else {
+    var on = flat.match(/on\s+(\d{1,2}\.\d{2}\.\d{2,4})/i);
+    if (on) reportDate = parseDMY(on[1]) || today();
+  }
   if (el('impReportDate')) el('impReportDate').value = reportDate;
 
   // Find all IP numbers as anchors
   var ipPat = /\b(IP\d{6,8})\b/g;
-  var ipMatches = []; var im;
+  var im;
+  var ipMatches = [];
   while ((im = ipPat.exec(flat)) !== null) {
     if (!seen[im[1]]) {
       seen[im[1]] = true;
@@ -566,74 +603,87 @@ function parsePdf(text) {
   }
 
   if (!ipMatches.length) {
-    setPdfStatus('No IP numbers found. Please verify this is a Bed Occupancy PDF.', 'se');
+    setPdfStatus('No IP registration numbers found. Please verify this is an IP Report PDF.', 'se');
     return;
   }
 
   for (var i = 0; i < ipMatches.length; i++) {
     var ipd = ipMatches[i].ipd;
 
-    // Look back for SL NO, DATE, OPD NO
+    // Before IP: look for date and OPD number
     var before = flat.substring(Math.max(0, ipMatches[i].index - 150), ipMatches[i].index);
-    var opdM = before.match(/(\d{9,12})\s*$/);
+    var opdM = before.match(/(\d{7,12})\s*$/);
     var opd = opdM ? opdM[1] : '';
-    var dateM = before.match(/(\d{2}\.\d{2}\.\d{4})/);
-    var admDateRaw = dateM ? dateM[0] : '';
+    // Date: dd.mm.yy or dd.mm.yyyy
+    var dateM = before.match(/(\d{1,2}\.\d{2}\.\d{2,4})/g);
+    var admDateRaw = dateM ? dateM[dateM.length - 1] : '';
     var doa = admDateRaw ? parseDMY(admDateRaw) : reportDate;
 
     // Segment after IP up to next IP
     var segEnd = ipMatches[i+1] ? ipMatches[i+1].index : flat.length;
     var seg = flat.substring(ipMatches[i].end, segEnd).trim();
 
-    // NAME — everything before Male/Female
-    var gm = seg.match(/\b(Female|Male)\b/i);
-    var gender = gm ? gm[0] : 'Male';
-    var gi = gm ? seg.indexOf(gm[0]) : -1;
+    // NAME — before sex (M/F/Male/Female)
+    var gm = seg.match(/\b(Female|Male|F|M)\b/i);
+    var gender = 'Male';
+    var gi = -1;
+    if (gm) {
+      gi = seg.indexOf(gm[0]);
+      // Make sure it's a standalone M or F (not part of a name)
+      var gchar = gm[0].toUpperCase();
+      if (gchar === 'F') gender = 'Female';
+      else if (gchar === 'FEMALE') gender = 'Female';
+      else gender = 'Male';
+    }
     var name = gi > -1 ? seg.substring(0, gi).trim().replace(/\s+/g, ' ') : '(verify)';
 
-    // AGE — digits right after gender
-    var afterG = gi > -1 ? seg.substring(gi + gender.length).trim() : seg;
-    var ageM = afterG.match(/^(\d{1,3})\b/);
-    var age = ageM ? ageM[1] : '';
-    var rem = ageM ? afterG.substring(ageM[0].length).trim() : afterG;
+    // AGE — digits right after gender token
+    var afterG = gi > -1 ? seg.substring(gi + gm[0].length).trim() : seg;
+    var ageM2 = afterG.match(/^(\d{1,3})\b/);
+    var age = ageM2 ? ageM2[1] : '';
+    var rem = ageM2 ? afterG.substring(ageM2[0].length).trim() : afterG;
 
-    // DEPARTMENT — find known dept keywords, map to ward
-    var depts = [
-      'KAYA CHIKITSA','SHALYA TANTRA','SHALAKYA TANTRA',
-      'PANCHA KARMA','KAUMARA BRUTYA','KAUMARA BHRITYA',
-      'PRASOOTI TANTRA','PRASUTI TANTRA'
-    ];
-    var bestIdx = -1; var bestDept = '';
-    for (var dp = 0; dp < depts.length; dp++) {
-      var dpi = rem.toUpperCase().indexOf(depts[dp]);
-      if (dpi > -1 && (bestIdx === -1 || dpi < bestIdx)) {
-        bestIdx = dpi; bestDept = depts[dp];
+    // DEPT CODE — first token after age (short code like PK, KC, ST etc.)
+    var deptM = rem.match(/^([A-Z]{1,3})\b/);
+    var deptCode = deptM ? deptM[1] : '';
+    var ward = resolveWard(deptCode);
+    var afterDept = deptM ? rem.substring(deptM[0].length).trim() : rem;
+
+    // DOCTOR — starts with DR or Dr, ends before diagnosis
+    // Remove doctor name from afterDept to get diagnosis
+    var doctor = '';
+    var diagText = afterDept;
+    var drM = afterDept.match(/\b(DR\.?\s+[A-Za-z][A-Za-z\s.]{1,40}?)(?=\s{2,}|\s[A-Z][a-z]|\s[a-z]{3,}|\d{1,2}\.\d{2})/i);
+    if (drM) {
+      doctor = drM[1].trim();
+      diagText = afterDept.substring(drM.index + drM[0].length).trim();
+    } else {
+      // Try splitting on 2+ spaces
+      var parts = afterDept.split(/\s{2,}/);
+      if (parts.length >= 2 && /^DR/i.test(parts[0])) {
+        doctor = parts[0].trim();
+        diagText = parts.slice(1).join(' ').trim();
       }
     }
-    var ward = bestDept ? mapDept(bestDept) : 'Kayachikitsa';
 
-    // DOCTOR — text after dept that matches "DR..." pattern, strip it out
-    var afterDept = bestIdx > -1 ? rem.substring(bestIdx + bestDept.length).trim() : rem;
-    var doctorM = afterDept.match(/^(DR\.?\s+[A-Za-z\s]{2,40}?)(?=[A-Z][a-z]|[A-Z]{2,}|\d)/i);
-    var doctor = doctorM ? doctorM[1].trim() : '';
-    var afterDoctor = doctor ? afterDept.substring(doctor.length).trim() : afterDept;
-
-    // DIAGNOSIS — everything remaining, but STOP before any date (DOA/DOD)
-    var diagRaw = afterDoctor.replace(/\b\d{2}\.\d{2}\.\d{4}\b.*/g, '').trim();
-    // Also strip trailing DOD label
-    diagRaw = diagRaw.replace(/\bDOD\b.*/gi, '').trim();
-    var diag = diagRaw.replace(/\s+/g, ' ').substring(0, 80).trim();
+    // DIAGNOSIS — remove any trailing dates (DOD) and DIH numbers
+    // Stop at first date pattern dd.mm.yy or dd.mm.yyyy
+    diagText = diagText.replace(/\b\d{1,2}\.\d{2}\.\d{2,4}\b.*/g, '').trim();
+    // Remove trailing "X day" pattern (DIH)
+    diagText = diagText.replace(/\d+\s*day.*/gi, '').trim();
+    diagText = diagText.replace(/\s+/g, ' ').substring(0, 80).trim();
 
     rows.push({
       sl: i + 1,
+      date: admDateRaw,
       opd: opd,
       ipd: ipd,
       name: name,
       gender: gender,
       age: age,
-      department: bestDept || '',
+      dept: deptCode,
       doctor: doctor,
-      diag: diag,
+      diag: diagText,
       doa: doa,
       ward: ward
     });
@@ -642,7 +692,7 @@ function parsePdf(text) {
   if (!rows.length) { setPdfStatus('Could not extract patient details.', 'se'); return; }
 
   impRows = rows;
-  el('wardMapRows').innerHTML = '<div class="wmap-row"><b>Ward auto-detected per patient from DEPARTMENT column. Edit if needed.</b></div>';
+  el('wardMapRows').innerHTML = '<div class="wmap-row" style="font-size:12px"><b>Ward auto-detected from Dept code (PK=Panchakarma, KC=Kayachikitsa, ST=Shalya Tantra, SK=Shalakya Tantra, KB=Kaumara Bhritya, PT=Prasuti Tantra). Edit ward in preview if needed.</b></div>';
   el('wardMapSec').style.display = 'block';
   el('impDateSec').style.display = 'block';
   renderImpTable(rows);
@@ -671,16 +721,16 @@ function renderImpTable(rows) {
     h += '<tr class="imp-row">' +
       '<td><input type="checkbox" class="impChk" checked value="' + i + '" style="width:auto;margin-bottom:0"></td>' +
       '<td>' + r.sl + '</td>' +
+      '<td style="white-space:nowrap;font-size:11px">' + (r.date||'') + '</td>' +
       '<td><input value="' + r.opd + '" style="width:95px" data-i="' + i + '" data-f="opd"></td>' +
       '<td><input value="' + r.ipd + '" style="width:90px" data-i="' + i + '" data-f="ipd"></td>' +
       '<td><input value="' + r.name + '" style="width:140px" data-i="' + i + '" data-f="name"></td>' +
       '<td><select class="igen" data-i="' + i + '" style="width:70px;margin-bottom:0"><option' + (r.gender==='Male'?' selected':'') + '>Male</option><option' + (r.gender==='Female'?' selected':'') + '>Female</option></select></td>' +
       '<td><input value="' + r.age + '" style="width:35px" data-i="' + i + '" data-f="age"></td>' +
-      '<td><select class="iward" data-i="' + i + '" style="width:150px;margin-bottom:0">' + wo + '</select></td>' +
+      '<td><select class="iward" data-i="' + i + '" style="width:160px;margin-bottom:0">' + wo + '</select><br><small style="color:#888">' + (r.dept||'') + '</small></td>' +
       '<td><input value="' + (r.doctor||'') + '" style="width:120px" data-i="' + i + '" data-f="doctor"></td>' +
-      '<td><input value="' + r.diag + '" style="width:120px" data-i="' + i + '" data-f="diag"></td>' +
-      '<td><input type="date" value="' + r.doa + '" style="width:125px" data-i="' + i + '" data-f="doa"></td>' +
-      '<td><input type="date" class="idisdate" value="' + reportDate + '" style="width:125px" data-i="' + i + '" data-f="disdate"></td>' +
+      '<td><input value="' + (r.diag||'') + '" style="width:120px" data-i="' + i + '" data-f="diag"></td>' +
+      '<td><input type="date" class="idisdate" value="' + reportDate + '" style="width:130px" data-i="' + i + '" data-f="disdate"></td>' +
       '<td><input class="idiet" value="Regular" style="width:80px" data-i="' + i + '"></td>' +
       '</tr>';
   }
