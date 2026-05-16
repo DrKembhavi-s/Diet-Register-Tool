@@ -367,8 +367,20 @@ document.getElementById('mainNav').addEventListener('click', function(e) {
   if (t === 'dashboard') refreshDashboard();
   if (t === 'menu') renderMenuSetup();
   if (t === 'patients') renderPatientTable();
-  if (t === 'register') { document.getElementById('regDateFrom').value = today(); document.getElementById('regDateTo').value = today(); }
-  if (t === 'indent') { document.getElementById('indentDateFrom').value = today(); document.getElementById('indentDateTo').value = today(); }
+  if (t === 'register') {
+    // Auto-fill from earliest admitted patient's admDate
+    var admDates = patients.filter(function(p){return p.admitted;}).map(function(p){return p.admDate;}).sort();
+    var earliest = admDates.length ? admDates[0] : today();
+    document.getElementById('regDateFrom').value = earliest;
+    document.getElementById('regDateTo').value = today();
+    renderRegister();
+  }
+  if (t === 'indent') {
+    var admDates2 = patients.filter(function(p){return p.admitted;}).map(function(p){return p.admDate;}).sort();
+    var earliest2 = admDates2.length ? admDates2[0] : today();
+    document.getElementById('indentDateFrom').value = earliest2;
+    document.getElementById('indentDateTo').value = today();
+  }
 });
 
 // Upload zone click
@@ -702,25 +714,50 @@ function importSelected() {
   var imported = 0, skipped = 0;
   checked.forEach(function(idx) {
     function gv(field) { var el = document.querySelector('input[data-idx="' + idx + '"][data-field="' + field + '"]'); return el ? el.value.trim() : ''; }
-    var name = gv('name'), ipd = gv('ipd'), doa = gv('doa');
+    var name = gv('name'), ipd = gv('ipd');
+    var doa = gv('doa'); // yyyy-mm-dd format from date input
     var days = parseInt((document.querySelector('.imp-days[data-idx="' + idx + '"]') || {}).value) || 7;
     var ward = (document.querySelector('.imp-ward[data-idx="' + idx + '"]') || {}).value || detectedWard;
     var gender = (document.querySelector('.imp-gender[data-idx="' + idx + '"]') || {}).value || '';
     var diet = (document.querySelector('.imp-diet[data-idx="' + idx + '"]') || {}).value || 'Regular';
-    if (!name || !ipd || !doa) { skipped++; return; }
+
+    // Validate
+    if (!name || !ipd) { skipped++; return; }
+
+    // If DOA is missing or invalid, use today
+    if (!doa || doa.length < 10) doa = today();
+
+    // Skip duplicate admitted patients
     if (patients.find(function(p) { return p.ipd === ipd && p.admitted; })) { skipped++; return; }
-    var p = { id: Date.now().toString() + '_' + idx, name: name, ipd: ipd, opd: gv('opd'), ward: ward, bed: gv('bed'), age: gv('age') + ' / ' + gender, diag: gv('diag'), dietType: diet, admDate: doa, disDate: addDays(doa, days - 1), days: days, admitted: true };
-    patients.push(p); genSchedule(p); imported++;
+
+    var disDate = addDays(doa, days - 1);
+    var p = {
+      id: Date.now().toString() + '_' + idx,
+      name: name, ipd: ipd,
+      opd: gv('opd'),
+      ward: ward,
+      bed: gv('bed'),
+      age: gv('age') + (gender ? ' / ' + gender : ''),
+      diag: gv('diag'),
+      dietType: diet,
+      admDate: doa,
+      disDate: disDate,
+      days: days,
+      admitted: true
+    };
+    patients.push(p);
+    genSchedule(p);
+    imported++;
   });
   saveAll();
-  alert(imported + ' patient(s) imported.' + (skipped ? ' ' + skipped + ' skipped.' : ''));
+  alert(imported + ' patient(s) imported.' + (skipped ? ' ' + skipped + ' skipped (duplicate or missing data).' : '') + '\n\nGo to Diet Register tab, select the admission date range, and click View.');
   renderPatientTable();
   if (imported > 0) {
     document.getElementById('importPreviewSection').style.display = 'none';
     document.getElementById('wardMappingSection').style.display = 'none';
     document.getElementById('importDatesSection').style.display = 'none';
     document.getElementById('pdfFileInput').value = '';
-    setStatus(imported + ' patient(s) imported. Go to Patients tab to review.', 'success');
+    setStatus(imported + ' patient(s) imported successfully. Select dates in Diet Register tab and click View.', 'success');
   }
 }
 
