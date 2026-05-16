@@ -42,8 +42,6 @@ tr:hover td{background:#eaf4fb}
 .badge-p{background:#e8daef;color:#7d3c98}
 .badge-kb{background:#fef9e7;color:#b7950b}
 .badge-ps{background:#fde2e2;color:#c0392b}
-.meal-cell select,.meal-cell input{margin-bottom:4px;font-size:12px}
-.ward-hdr{background:#2e86c1;color:#fff;padding:8px 12px;border-radius:6px;font-weight:700;margin-bottom:6px;font-size:13px}
 .day-tabs{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:12px}
 .day-tab{padding:5px 12px;background:#d6eaf8;border:none;border-radius:5px;cursor:pointer;font-size:12px;font-weight:600;color:#1a5276}
 .day-tab.active{background:#1a5276;color:#fff}
@@ -64,11 +62,8 @@ tr:hover td{background:#eaf4fb}
 .imp-prev{overflow-x:auto}
 .imp-row input,.imp-row select{margin-bottom:0;padding:4px 6px;font-size:12px}
 .wmap-row{display:flex;align-items:center;gap:10px;margin-bottom:6px;font-size:13px}
-.wmap-row select{width:220px;margin-bottom:0}
-.ind-input{width:80px;padding:4px;font-size:12px;border:1px solid #ccc;border-radius:4px}
 .ci{margin-top:4px}
-.day-block{border:1px solid #d6eaf8;border-radius:8px;margin-bottom:16px;overflow:hidden}
-.day-block-hdr{background:#eaf4fb;padding:8px 14px;font-weight:700;color:#1a5276;font-size:13px}
+.ward-hdr{background:#2e86c1;color:#fff;padding:8px 12px;border-radius:6px;font-weight:700;margin-bottom:6px;font-size:13px}
 @media print{body *{visibility:hidden}.pa,.pa *{visibility:visible}.pa{display:block!important;position:fixed;top:0;left:0;width:100%;padding:20px}}
 .pa{display:none}
 </style>
@@ -87,7 +82,6 @@ tr:hover td{background:#eaf4fb}
   <button id="nb-indent" onclick="showTab('indent')">🛒 Diet Indent</button>
 </nav>
 
-<!-- DASHBOARD -->
 <div id="tab-dashboard" class="tab active">
   <div class="card">
     <h3>📅 Dashboard</h3>
@@ -106,11 +100,10 @@ tr:hover td{background:#eaf4fb}
   </div>
 </div>
 
-<!-- WEEKLY MENU -->
 <div id="tab-menu" class="tab">
   <div class="card">
     <h3>🗓️ Weekly Menu Setup</h3>
-    <p style="font-size:12px;color:#666;margin-bottom:12px">Set default meals for each day. Auto-fills when a patient is admitted.</p>
+    <p style="font-size:12px;color:#666;margin-bottom:12px">Set default meals for each day.</p>
     <div class="day-tabs" id="menuDayTabs"></div>
     <div id="menuDayContent"></div>
     <div class="flex-end">
@@ -120,14 +113,13 @@ tr:hover td{background:#eaf4fb}
   </div>
 </div>
 
-<!-- PATIENTS -->
 <div id="tab-patients" class="tab">
   <div class="card">
     <h3>➕ Admit New Patient</h3>
     <div class="grid3">
       <div><label>Patient Name</label><input id="pt_name" placeholder="Full Name"></div>
-      <div><label>IPD Number</label><input id="pt_ipd" placeholder="IP2400476"></div>
-      <div><label>OPD Number</label><input id="pt_opd" placeholder="240203486"></div>
+      <div><label>IPD Number</label><input id="pt_ipd" placeholder="IP2600748"></div>
+      <div><label>OPD Number</label><input id="pt_opd" placeholder="260408750"></div>
     </div>
     <div class="grid3">
       <div><label>Ward</label>
@@ -140,7 +132,7 @@ tr:hover td{background:#eaf4fb}
       <div><label>Age / Gender</label><input id="pt_age" placeholder="50 / Male"></div>
     </div>
     <div class="grid2">
-      <div><label>Diagnosis</label><input id="pt_diag" placeholder="e.g. Sandivata, Prameha..."></div>
+      <div><label>Diagnosis</label><input id="pt_diag" placeholder="e.g. Amavata, Prameha..."></div>
       <div><label>Diet Type</label><input id="pt_diettype" placeholder="e.g. Diabetic, No salt..."></div>
     </div>
     <div class="grid3">
@@ -162,20 +154,19 @@ tr:hover td{background:#eaf4fb}
         <option>Kayachikitsa</option><option>Shalya Tantra</option><option>Shalakya Tantra</option>
         <option>Panchakarma</option><option>Kaumara Bhritya</option><option>Prasuti Tantra &amp; Stri Roga</option>
       </select>
-      <button class="btn btn-info btn-sm" onclick="renderPatientTable()">🔍 Search</button>
+      <button class="btn btn-info btn-sm" onclick="renderPtTable()">🔍 Search</button>
       <button class="btn btn-danger btn-sm" onclick="dischargeSelected()">🚪 Discharge Selected</button>
     </div>
     <div style="overflow-x:auto">
       <table><thead><tr>
         <th><input type="checkbox" id="selAll" style="width:auto;margin-bottom:0" onclick="toggleAll()"></th>
-        <th>IPD No.</th><th>OPD No.</th><th>Name</th><th>Ward</th><th>Bed</th><th>Age/Gender</th>
-        <th>Diagnosis</th><th>Admitted</th><th>Discharge</th><th>Days</th><th>Diet Type</th><th>Action</th>
+        <th>IPD</th><th>OPD</th><th>Name</th><th>Ward</th><th>Age/Gender</th>
+        <th>Diagnosis</th><th>Admitted</th><th>Discharge</th><th>Days</th><th>Action</th>
       </tr></thead><tbody id="ptTbl"></tbody></table>
     </div>
   </div>
 </div>
 
-<!-- PDF IMPORT -->
 <div id="tab-import" class="tab">
   <div class="card">
     <h3>📥 Import Patients from PDF</h3>
@@ -184,12 +175,12 @@ tr:hover td{background:#eaf4fb}
       <input type="file" id="pdfFile" accept=".pdf" style="display:none">
       <div class="icon">📄</div>
       <p>Click to upload PDF Report</p>
-      <small>Supports: Jain AGM Bed Occupancy Report format</small>
+      <small>Supports: Jain AGM Bed Occupancy Report</small>
     </div>
     <div id="pdfStatus"></div>
     <div id="wardMapSec" style="display:none">
       <div class="card" style="background:#f8f9fa;border:1px solid #d6eaf8">
-        <h3>🏥 Ward Mapping</h3>
+        <h3>🏥 Ward Detection</h3>
         <div id="wardMapRows"></div>
       </div>
     </div>
@@ -214,10 +205,12 @@ tr:hover td{background:#eaf4fb}
           <span id="impCount" style="font-size:12px;color:#555"></span>
           <button class="btn btn-success" onclick="doImport()" style="margin-left:auto">📥 Import Selected</button>
         </div>
-        <div class="imp-prev"><table><thead><tr>
-          <th>✓</th><th>#</th><th>OPD</th><th>IPD</th><th>Name</th><th>Gender</th><th>Age</th>
-          <th>Diagnosis</th><th>Bed</th><th>DOA</th><th>Ward</th><th>Days</th><th>Diet</th>
-        </tr></thead><tbody id="impTbl"></tbody></table></div>
+        <div class="imp-prev">
+          <table><thead><tr>
+            <th>✓</th><th>#</th><th>OPD</th><th>IPD</th><th>Name</th><th>Gender</th><th>Age</th>
+            <th>Diagnosis</th><th>DOA</th><th>Ward</th><th>Days</th><th>Diet</th>
+          </tr></thead><tbody id="impTbl"></tbody></table>
+        </div>
         <div class="flex-end" style="margin-top:10px">
           <button class="btn btn-success" onclick="doImport()">📥 Import Selected Patients</button>
         </div>
@@ -226,12 +219,11 @@ tr:hover td{background:#eaf4fb}
   </div>
 </div>
 
-<!-- DIET REGISTER -->
 <div id="tab-register" class="tab">
   <div class="card">
     <h3>📋 Diet Register</h3>
     <div class="flex" style="margin-bottom:12px">
-      <div><label>Select Date</label><input type="date" id="regFrom" style="width:180px;margin-bottom:0"></div>
+      <div><label>Select Date</label><input type="date" id="regDate" style="width:180px;margin-bottom:0"></div>
       <div><label>Ward</label>
         <select id="regWard" style="width:190px;margin-bottom:0">
           <option value="">All Wards</option>
@@ -243,35 +235,31 @@ tr:hover td{background:#eaf4fb}
       <button class="btn btn-success" onclick="saveRegister()">💾 Save</button>
       <button class="btn btn-info" onclick="printRegister()">🖨️ Print</button>
     </div>
-    <div id="regContent"></div>
+    <div id="regContent"><p style="color:#999;text-align:center;padding:20px">Select a date and click View.</p></div>
   </div>
 </div>
 
-<!-- DIET INDENT -->
 <div id="tab-indent" class="tab">
   <div class="card">
     <h3>🛒 Diet Indent</h3>
     <div class="flex" style="margin-bottom:12px">
-      <div><label>From Date</label><input type="date" id="indFrom" style="width:170px;margin-bottom:0"></div>
-      <div><label>To Date</label><input type="date" id="indTo" style="width:170px;margin-bottom:0"></div>
+      <div><label>Select Date</label><input type="date" id="indDate" style="width:180px;margin-bottom:0"></div>
       <button class="btn btn-primary" onclick="renderIndent()">🔍 View</button>
       <button class="btn btn-success" onclick="saveIndent()">💾 Save</button>
       <button class="btn btn-info" onclick="printIndent()">🖨️ Print</button>
     </div>
-    <div id="indContent"></div>
+    <div id="indContent"><p style="color:#999;text-align:center;padding:20px">Select a date and click View.</p></div>
   </div>
 </div>
 
 <div class="pa" id="printArea"></div>
 
 <script>
-// ======== DATA ========
 var patients = JSON.parse(localStorage.getItem('agm_p') || '[]');
 var schedules = JSON.parse(localStorage.getItem('agm_s') || '{}');
 var menu = JSON.parse(localStorage.getItem('agm_m') || 'null');
 var indent = JSON.parse(localStorage.getItem('agm_i') || '{}');
 var impRows = [];
-var detWard = 'Kayachikitsa';
 var menuDay = 0;
 var pdfReady = false;
 
@@ -294,538 +282,617 @@ var ICATS = {
   'Others':['Sugar (kg)','Jaggery (kg)','Papad (nos)','Banana (dozen)','Tea or Coffee (g)']
 };
 
-var WKEYS = {
-  'Kayachikitsa':['kaya','kayachikitsa'],
-  'Shalya Tantra':['shalya','surgery'],
-  'Shalakya Tantra':['shalakya','ent'],
-  'Panchakarma':['panchakarma'],
-  'Kaumara Bhritya':['kaumara','paediatric'],
-  'Prasuti Tantra & Stri Roga':['prasuti','stri','gynaecology']
-};
+var DEPT_MAP = [
+  {keys:['kaya chikitsa','kayachikitsa'],ward:'Kayachikitsa'},
+  {keys:['shalya tantra'],ward:'Shalya Tantra'},
+  {keys:['shalakya tantra'],ward:'Shalakya Tantra'},
+  {keys:['pancha karma','panchakarma'],ward:'Panchakarma'},
+  {keys:['kaumara brutya','kaumara bhritya','kaumara'],ward:'Kaumara Bhritya'},
+  {keys:['prasooti tantra','prasuti tantra','prasooti','prasuti'],ward:'Prasuti Tantra & Stri Roga'}
+];
 
 var DMENU = {};
-DAYS.forEach(function(d,i){
-  DMENU[d]={Breakfast:SI.Breakfast[i%SI.Breakfast.length],Lunch:SI.Lunch[i%SI.Lunch.length],Dinner:SI.Dinner[i%SI.Dinner.length]};
-});
-if(!menu) menu = JSON.parse(JSON.stringify(DMENU));
+for (var di = 0; di < DAYS.length; di++) {
+  var dd = DAYS[di];
+  DMENU[dd] = {
+    Breakfast: SI.Breakfast[di % SI.Breakfast.length],
+    Lunch: SI.Lunch[di % SI.Lunch.length],
+    Dinner: SI.Dinner[di % SI.Dinner.length]
+  };
+}
+if (!menu) { menu = JSON.parse(JSON.stringify(DMENU)); }
 
-// ======== UTILS ========
-function today(){ return new Date().toISOString().split('T')[0]; }
-function dayName(ds){ var d=new Date(ds+'T00:00:00'); return DAYS[d.getDay()===0?6:d.getDay()-1]; }
-function addDays(ds,n){ var d=new Date(ds+'T00:00:00'); d.setDate(d.getDate()+n); return d.toISOString().split('T')[0]; }
-function fmtD(ds){ if(!ds)return''; var d=new Date(ds+'T00:00:00'); return d.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}); }
-function parseDMY(s){ if(!s)return''; var m=s.match(/(\d{1,2})[.\-\/](\d{1,2})[.\-\/](\d{4})/); return m?m[3]+'-'+m[2].padStart(2,'0')+'-'+m[1].padStart(2,'0'):''; }
-function wBadge(w){ var c={'Kayachikitsa':'badge-k','Shalya Tantra':'badge-s','Shalakya Tantra':'badge-sh','Panchakarma':'badge-p','Kaumara Bhritya':'badge-kb','Prasuti Tantra & Stri Roga':'badge-ps'}; return '<span class="badge '+(c[w]||'')+'">'+w+'</span>'; }
-function saveAll(){ localStorage.setItem('agm_p',JSON.stringify(patients)); localStorage.setItem('agm_s',JSON.stringify(schedules)); localStorage.setItem('agm_m',JSON.stringify(menu)); localStorage.setItem('agm_i',JSON.stringify(indent)); }
-function getRange(fId,tId){ var f=document.getElementById(fId).value||today(); var t=document.getElementById(tId).value||f; if(t<f)t=f; var out=[],c=f; while(c<=t){out.push(c);c=addDays(c,1);} return out; }
-function setPdfStatus(msg,type){ var el=document.getElementById('pdfStatus'); el.className=type; el.textContent=msg; el.style.display='block'; }
-function el(id){ return document.getElementById(id); }
+function el(id) { return document.getElementById(id); }
+function today() { return new Date().toISOString().split('T')[0]; }
+function dayName(ds) { var d = new Date(ds + 'T00:00:00'); return DAYS[d.getDay() === 0 ? 6 : d.getDay() - 1]; }
+function addDays(ds, n) { var d = new Date(ds + 'T00:00:00'); d.setDate(d.getDate() + n); return d.toISOString().split('T')[0]; }
+function fmtD(ds) { if (!ds) return ''; var d = new Date(ds + 'T00:00:00'); return d.toLocaleDateString('en-IN', {day:'2-digit',month:'short',year:'numeric'}); }
 
-// ======== TABS ========
-function showTab(t){
-  document.querySelectorAll('.tab').forEach(function(x){x.classList.remove('active');});
-  document.querySelectorAll('nav button').forEach(function(x){x.classList.remove('active');});
-  var tab=el('tab-'+t); if(tab) tab.classList.add('active');
-  var btn=el('nb-'+t); if(btn) btn.classList.add('active');
-  if(t==='dashboard') refreshDashboard();
-  if(t==='menu') renderMenu();
-  if(t==='patients') renderPtTable();
-  if(t==='register'){
-    el('regFrom').value=today();
-    el('regContent').innerHTML='<p style="color:#999;text-align:center;padding:20px">Select a date and click View.</p>';
+function fixDate(s) {
+  if (!s) return today();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+  var m = s.match(/^(\d{1,2})[.\-\/](\d{1,2})[.\-\/](\d{4})$/);
+  if (m) return m[3] + '-' + m[2].padStart(2,'0') + '-' + m[1].padStart(2,'0');
+  return today();
+}
+
+function parseDMY(s) {
+  if (!s) return '';
+  var m = s.match(/(\d{1,2})[.\-\/](\d{1,2})[.\-\/](\d{4})/);
+  if (m) return m[3] + '-' + m[2].padStart(2,'0') + '-' + m[1].padStart(2,'0');
+  return '';
+}
+
+function wBadge(w) {
+  var c = {'Kayachikitsa':'badge-k','Shalya Tantra':'badge-s','Shalakya Tantra':'badge-sh','Panchakarma':'badge-p','Kaumara Bhritya':'badge-kb','Prasuti Tantra & Stri Roga':'badge-ps'};
+  return '<span class="badge ' + (c[w] || '') + '">' + w + '</span>';
+}
+
+function saveAll() {
+  localStorage.setItem('agm_p', JSON.stringify(patients));
+  localStorage.setItem('agm_s', JSON.stringify(schedules));
+  localStorage.setItem('agm_m', JSON.stringify(menu));
+  localStorage.setItem('agm_i', JSON.stringify(indent));
+}
+
+function setPdfStatus(msg, cls) {
+  var e = el('pdfStatus');
+  e.className = cls;
+  e.textContent = msg;
+  e.style.display = 'block';
+}
+
+function mapDept(txt) {
+  var low = txt.toLowerCase();
+  for (var i = 0; i < DEPT_MAP.length; i++) {
+    for (var j = 0; j < DEPT_MAP[i].keys.length; j++) {
+      if (low.indexOf(DEPT_MAP[i].keys[j]) > -1) return DEPT_MAP[i].ward;
+    }
   }
-  if(t==='indent'){
-    el('indFrom').value=today();
-    el('indTo').value=today();
-    el('indContent').innerHTML='<p style="color:#999;text-align:center;padding:20px">Select a date range above and click 🔍 View.</p>';
+  return 'Kayachikitsa';
+}
+
+function showTab(t) {
+  document.querySelectorAll('.tab').forEach(function(x) { x.classList.remove('active'); });
+  document.querySelectorAll('nav button').forEach(function(x) { x.classList.remove('active'); });
+  var tab = el('tab-' + t); if (tab) tab.classList.add('active');
+  var btn = el('nb-' + t); if (btn) btn.classList.add('active');
+  if (t === 'dashboard') refreshDashboard();
+  if (t === 'menu') renderMenu();
+  if (t === 'patients') renderPtTable();
+  if (t === 'register') { el('regDate').value = today(); el('regContent').innerHTML = '<p style="color:#999;text-align:center;padding:20px">Select a date and click View.</p>'; }
+  if (t === 'indent') { el('indDate').value = today(); el('indContent').innerHTML = '<p style="color:#999;text-align:center;padding:20px">Select a date and click View.</p>'; }
+}
+
+function refreshDashboard() {
+  var dt = el('dashDate').value || today();
+  var pts = [];
+  for (var i = 0; i < patients.length; i++) {
+    var p = patients[i];
+    var adm = fixDate(p.admDate);
+    var dis = fixDate(p.disDate);
+    if (p.admitted && adm <= dt && dis >= dt) pts.push(p);
+  }
+  var n = pts.length;
+  var wd = {};
+  for (var wi = 0; wi < WARDS.length; wi++) wd[WARDS[wi]] = 0;
+  for (var pi = 0; pi < pts.length; pi++) { if (wd[pts[pi].ward] !== undefined) wd[pts[pi].ward]++; }
+  el('statBoxes').innerHTML =
+    '<div class="stat-box"><div class="num">' + n + '</div><div class="lbl">Admitted</div></div>' +
+    '<div class="stat-box" style="background:#1e8449"><div class="num">140</div><div class="lbl">Total Beds</div></div>' +
+    '<div class="stat-box" style="background:#7d3c98"><div class="num">' + Math.round(n/140*100) + '%</div><div class="lbl">Occupancy</div></div>' +
+    '<div class="stat-box" style="background:#ca6f1e"><div class="num">' + (n*3) + '</div><div class="lbl">Meals Today</div></div>';
+  var rows = '';
+  for (var ri = 0; ri < WARDS.length; ri++) {
+    var w = WARDS[ri];
+    rows += '<tr><td>' + wBadge(w) + '</td><td>' + wd[w] + '</td><td>' + wd[w] + '</td><td>' + wd[w] + '</td><td>' + wd[w] + '</td></tr>';
+  }
+  el('wardTbl').innerHTML = rows;
+}
+
+function renderMenu() {
+  var tabs = '';
+  for (var i = 0; i < DAYS.length; i++) {
+    tabs += '<button class="day-tab' + (i === menuDay ? ' active' : '') + '" onclick="menuDay=' + i + ';renderMenu()">' + DAYS[i] + '</button>';
+  }
+  el('menuDayTabs').innerHTML = tabs;
+  var d = DAYS[menuDay]; var m = menu[d] || {};
+  var h = '<div class="grid3">';
+  for (var mi = 0; mi < MEALS.length; mi++) {
+    var ml = MEALS[mi];
+    h += '<div><label>' + ml + '</label>';
+    h += '<select id="ms_' + ml + '" onchange="document.getElementById(\'mt_' + ml + '\').value=this.value===\'__c\'?\'\':this.value">';
+    h += '<option value="">-- Select --</option>';
+    for (var si = 0; si < SI[ml].length; si++) {
+      h += '<option' + (m[ml] === SI[ml][si] ? ' selected' : '') + '>' + SI[ml][si] + '</option>';
+    }
+    h += '<option value="__c"' + (m[ml] && SI[ml].indexOf(m[ml]) === -1 ? ' selected' : '') + '>Custom...</option>';
+    h += '</select>';
+    h += '<input id="mt_' + ml + '" class="ci" placeholder="Or type custom" value="' + (m[ml] && SI[ml].indexOf(m[ml]) === -1 ? m[ml] : '') + '">';
+    h += '</div>';
+  }
+  h += '</div>';
+  el('menuDayContent').innerHTML = h;
+}
+
+function saveWeeklyMenu() {
+  var d = DAYS[menuDay];
+  if (!menu[d]) menu[d] = {};
+  for (var i = 0; i < MEALS.length; i++) {
+    var ml = MEALS[i];
+    var txt = el('mt_' + ml).value.trim();
+    var sel = el('ms_' + ml).value;
+    menu[d][ml] = txt || (sel && sel !== '__c' ? sel : '');
+  }
+  saveAll(); alert('Menu for ' + d + ' saved!');
+}
+
+function calcDischarge() {
+  var a = el('pt_adm').value;
+  var n = parseInt(el('pt_days').value) || 0;
+  if (a && n > 0) el('pt_dis').value = addDays(a, n - 1);
+}
+
+function genSched(p) {
+  var adm = fixDate(p.admDate);
+  for (var i = 0; i < p.days; i++) {
+    var dt = addDays(adm, i);
+    var mn = menu[dayName(dt)] || {};
+    if (!schedules[dt]) schedules[dt] = {};
+    schedules[dt][p.id] = { Breakfast: mn.Breakfast || '', Lunch: mn.Lunch || '', Dinner: mn.Dinner || '' };
   }
 }
 
-// ======== DASHBOARD ========
-function refreshDashboard(){
-  var dt=el('dashDate').value||today();
-  var pts=patients.filter(function(p){return p.admitted&&p.admDate<=dt&&p.disDate>=dt;});
-  var n=pts.length; var wd={}; WARDS.forEach(function(w){wd[w]=0;});
-  pts.forEach(function(p){if(wd[p.ward]!==undefined)wd[p.ward]++;});
-  el('statBoxes').innerHTML='<div class="stat-box"><div class="num">'+n+'</div><div class="lbl">Admitted</div></div><div class="stat-box" style="background:#1e8449"><div class="num">140</div><div class="lbl">Total Beds</div></div><div class="stat-box" style="background:#7d3c98"><div class="num">'+Math.round(n/140*100)+'%</div><div class="lbl">Occupancy</div></div><div class="stat-box" style="background:#ca6f1e"><div class="num">'+(n*3)+'</div><div class="lbl">Meals Today</div></div>';
-  el('wardTbl').innerHTML=WARDS.map(function(w){return'<tr><td>'+wBadge(w)+'</td><td>'+wd[w]+'</td><td>'+wd[w]+'</td><td>'+wd[w]+'</td><td>'+wd[w]+'</td></tr>';}).join('');
-}
-
-// ======== WEEKLY MENU ========
-function renderMenu(){
-  el('menuDayTabs').innerHTML=DAYS.map(function(d,i){return'<button class="day-tab'+(i===menuDay?' active':'')+'" onclick="menuDay='+i+';renderMenu()">'+d+'</button>';}).join('');
-  var d=DAYS[menuDay],m=menu[d]||{};
-  var h='<div class="grid3">';
-  MEALS.forEach(function(ml){
-    h+='<div><label>'+ml+'</label><select id="ms_'+ml+'" onchange="document.getElementById(\'mt_'+ml+'\').value=this.value===\'__c\'?\'\':this.value"><option value="">-- Select --</option>';
-    SI[ml].forEach(function(x){h+='<option'+(m[ml]===x?' selected':'')+'>'+x+'</option>';});
-    h+='<option value="__c"'+(m[ml]&&SI[ml].indexOf(m[ml])===-1?' selected':'')+'>Custom...</option></select>';
-    h+='<input id="mt_'+ml+'" class="ci" placeholder="Or type custom" value="'+(m[ml]&&SI[ml].indexOf(m[ml])===-1?m[ml]:'')+'">';
-    h+='</div>';
-  });
-  h+='</div>';
-  el('menuDayContent').innerHTML=h;
-}
-function saveWeeklyMenu(){
-  var d=DAYS[menuDay]; if(!menu[d])menu[d]={};
-  MEALS.forEach(function(ml){
-    var t=el('mt_'+ml).value.trim(); var s=el('ms_'+ml).value;
-    menu[d][ml]=t||(s&&s!=='__c'?s:'');
-  });
-  saveAll(); alert('Menu for '+d+' saved!');
-}
-
-// ======== PATIENTS ========
-function calcDischarge(){
-  var a=el('pt_adm').value; var n=parseInt(el('pt_days').value)||0;
-  if(a&&n>0) el('pt_dis').value=addDays(a,n-1);
-}
-function genSched(p){
-  for(var i=0;i<p.days;i++){
-    var dt=addDays(p.admDate,i); var mn=menu[dayName(dt)]||{};
-    if(!schedules[dt])schedules[dt]={};
-    schedules[dt][p.id]={Breakfast:mn.Breakfast||'',Lunch:mn.Lunch||'',Dinner:mn.Dinner||''};
-  }
-}
-function admitPatient(){
-  var name=el('pt_name').value.trim(); var ipd=el('pt_ipd').value.trim();
-  var adm=el('pt_adm').value; var days=parseInt(el('pt_days').value)||0;
-  if(!name||!ipd){alert('Name and IPD required.');return;}
-  if(!adm||!days){alert('Enter admission date and number of days.');return;}
-  var p={id:Date.now().toString(),name:name,ipd:ipd,opd:el('pt_opd').value.trim(),ward:el('pt_ward').value,bed:el('pt_bed').value.trim(),age:el('pt_age').value.trim(),diag:el('pt_diag').value.trim(),dietType:el('pt_diettype').value.trim(),admDate:adm,disDate:addDays(adm,days-1),days:days,admitted:true};
+function admitPatient() {
+  var name = el('pt_name').value.trim();
+  var ipd = el('pt_ipd').value.trim();
+  var adm = el('pt_adm').value;
+  var days = parseInt(el('pt_days').value) || 0;
+  if (!name || !ipd) { alert('Name and IPD required.'); return; }
+  if (!adm || !days) { alert('Enter admission date and number of days.'); return; }
+  var p = {
+    id: Date.now().toString(), name: name, ipd: ipd,
+    opd: el('pt_opd').value.trim(), ward: el('pt_ward').value,
+    bed: el('pt_bed').value.trim(), age: el('pt_age').value.trim(),
+    diag: el('pt_diag').value.trim(), dietType: el('pt_diettype').value.trim(),
+    admDate: adm, disDate: addDays(adm, days - 1), days: days, admitted: true
+  };
   patients.push(p); genSched(p); saveAll();
-  ['pt_name','pt_ipd','pt_opd','pt_bed','pt_age','pt_diag','pt_diettype','pt_adm','pt_dis','pt_days'].forEach(function(id){el(id).value='';});
-  renderPtTable(); alert(name+' admitted for '+days+' days.');
+  ['pt_name','pt_ipd','pt_opd','pt_bed','pt_age','pt_diag','pt_diettype','pt_adm','pt_dis','pt_days'].forEach(function(id) { el(id).value = ''; });
+  renderPtTable();
+  alert(name + ' admitted for ' + days + ' days.');
 }
-function renderPtTable(){
-  var s=el('ptSearch').value.toLowerCase(); var wf=el('ptWardFilter').value;
-  var list=patients.filter(function(p){return p.admitted&&(!s||p.name.toLowerCase().indexOf(s)>-1||p.ipd.toLowerCase().indexOf(s)>-1)&&(!wf||p.ward===wf);});
-  el('ptTbl').innerHTML=list.length?list.map(function(p){
-    return'<tr><td><input type="checkbox" class="ptChk" value="'+p.id+'" style="width:auto;margin-bottom:0"></td><td><b>'+p.ipd+'</b></td><td>'+(p.opd||'-')+'</td><td>'+p.name+'</td><td>'+wBadge(p.ward)+'</td><td>'+(p.bed||'-')+'</td><td>'+(p.age||'-')+'</td><td>'+(p.diag||'-')+'</td><td>'+fmtD(p.admDate)+'</td><td>'+fmtD(p.disDate)+'</td><td>'+p.days+'</td><td>'+(p.dietType||'Regular')+'</td><td><button class="btn btn-danger btn-sm" onclick="disOne(\''+p.id+'\')">Discharge</button></td></tr>';
-  }).join(''):'<tr><td colspan="13" style="text-align:center;color:#999">No patients found.</td></tr>';
+
+function renderPtTable() {
+  var s = el('ptSearch').value.toLowerCase();
+  var wf = el('ptWardFilter').value;
+  var rows = '';
+  var count = 0;
+  for (var i = 0; i < patients.length; i++) {
+    var p = patients[i];
+    if (!p.admitted) continue;
+    if (s && p.name.toLowerCase().indexOf(s) === -1 && p.ipd.toLowerCase().indexOf(s) === -1) continue;
+    if (wf && p.ward !== wf) continue;
+    count++;
+    rows += '<tr>' +
+      '<td><input type="checkbox" class="ptChk" value="' + p.id + '" style="width:auto;margin-bottom:0"></td>' +
+      '<td><b>' + p.ipd + '</b></td><td>' + (p.opd||'-') + '</td><td>' + p.name + '</td>' +
+      '<td>' + wBadge(p.ward) + '</td><td>' + (p.age||'-') + '</td>' +
+      '<td>' + (p.diag||'-') + '</td><td>' + fmtD(fixDate(p.admDate)) + '</td>' +
+      '<td>' + fmtD(fixDate(p.disDate)) + '</td><td>' + p.days + '</td>' +
+      '<td><button class="btn btn-danger btn-sm" onclick="disOne(\'' + p.id + '\')">Discharge</button></td></tr>';
+  }
+  el('ptTbl').innerHTML = count ? rows : '<tr><td colspan="11" style="text-align:center;color:#999">No patients found.</td></tr>';
 }
-function toggleAll(){ var v=el('selAll').checked; document.querySelectorAll('.ptChk').forEach(function(c){c.checked=v;}); }
-function disOne(id){ if(!confirm('Discharge?'))return; var p=patients.find(function(x){return x.id===id;}); if(p){p.admitted=false;saveAll();renderPtTable();} }
-function dischargeSelected(){
-  var ids=Array.from(document.querySelectorAll('.ptChk:checked')).map(function(x){return x.value;});
-  if(!ids.length){alert('Select patients first.');return;}
-  if(!confirm('Discharge '+ids.length+' patient(s)?'))return;
-  ids.forEach(function(id){var p=patients.find(function(x){return x.id===id;});if(p)p.admitted=false;});
+
+function toggleAll() { var v = el('selAll').checked; document.querySelectorAll('.ptChk').forEach(function(c) { c.checked = v; }); }
+function disOne(id) {
+  if (!confirm('Discharge?')) return;
+  for (var i = 0; i < patients.length; i++) { if (patients[i].id === id) { patients[i].admitted = false; break; } }
+  saveAll(); renderPtTable();
+}
+function dischargeSelected() {
+  var ids = Array.from(document.querySelectorAll('.ptChk:checked')).map(function(x) { return x.value; });
+  if (!ids.length) { alert('Select patients first.'); return; }
+  if (!confirm('Discharge ' + ids.length + ' patient(s)?')) return;
+  for (var i = 0; i < patients.length; i++) { if (ids.indexOf(patients[i].id) > -1) patients[i].admitted = false; }
   saveAll(); renderPtTable();
 }
 
-// ======== PDF IMPORT ========
-function loadPdf(cb){
-  if(pdfReady&&window.pdfjsLib){cb();return;}
-  var s=document.createElement('script');
-  s.src='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
-  s.onload=function(){
-    pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-    pdfReady=true; cb();
+// PDF IMPORT
+function loadPdf(cb) {
+  if (pdfReady && window.pdfjsLib) { cb(); return; }
+  var s = document.createElement('script');
+  s.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+  s.onload = function() {
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    pdfReady = true; cb();
   };
-  s.onerror=function(){setPdfStatus('Cannot load PDF library. Check internet connection.','se');};
+  s.onerror = function() { setPdfStatus('Cannot load PDF library. Check internet.', 'se'); };
   document.head.appendChild(s);
 }
 
-function handlePdfFile(file){
-  if(!file)return;
-  setPdfStatus('Loading PDF library...','si');
-  el('wardMapSec').style.display='none';
-  el('impDateSec').style.display='none';
-  el('impPrevSec').style.display='none';
-  loadPdf(function(){
-    setPdfStatus('Reading PDF...','si');
-    var reader=new FileReader();
-    reader.onload=function(e){
-      var data=new Uint8Array(e.target.result);
-      pdfjsLib.getDocument({data:data}).promise.then(function(pdf){
-        var pp=[];
-        for(var i=1;i<=pdf.numPages;i++){
-          pp.push(pdf.getPage(i).then(function(pg){
-            return pg.getTextContent().then(function(c){return c.items.map(function(x){return x.str;}).join(' ');});
+function handlePdfFile(file) {
+  if (!file) return;
+  setPdfStatus('Loading PDF library...', 'si');
+  el('wardMapSec').style.display = 'none';
+  el('impDateSec').style.display = 'none';
+  el('impPrevSec').style.display = 'none';
+  loadPdf(function() {
+    setPdfStatus('Reading PDF...', 'si');
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      var data = new Uint8Array(e.target.result);
+      pdfjsLib.getDocument({data: data}).promise.then(function(pdf) {
+        var pages = [];
+        for (var i = 1; i <= pdf.numPages; i++) {
+          pages.push(pdf.getPage(i).then(function(pg) {
+            return pg.getTextContent().then(function(c) {
+              return c.items.map(function(x) { return x.str; }).join(' ');
+            });
           }));
         }
-        Promise.all(pp).then(function(txts){parsePdf(txts.join('\n'));});
-      }).catch(function(e){setPdfStatus('Error: '+e.message,'se');});
+        Promise.all(pages).then(function(txts) { parsePdf(txts.join(' ')); });
+      }).catch(function(err) { setPdfStatus('Error: ' + err.message, 'se'); });
     };
-    reader.onerror=function(){setPdfStatus('Could not read file.','se');};
+    reader.onerror = function() { setPdfStatus('Could not read file.', 'se'); };
     reader.readAsArrayBuffer(file);
   });
 }
 
-function detectWard(txt){
-  var low=txt.toLowerCase(); var ks=Object.keys(WKEYS);
-  for(var i=0;i<ks.length;i++){var kws=WKEYS[ks[i]];for(var j=0;j<kws.length;j++){if(low.indexOf(kws[j])>-1)return ks[i];}}
-  return'Kayachikitsa';
-}
+function parsePdf(text) {
+  var flat = text.replace(/\s{2,}/g, ' ').trim();
+  var rows = [];
+  var seen = {};
 
-function parsePdf(text){
-  detWard=detectWard(text);
-  // Flatten all text — PDF.js splits lines unpredictably
-  var flat=text.replace(/[\r\n]+/g,' ').replace(/\s{2,}/g,' ');
-  var rows=[];
-
-  // Anchor on IP numbers — these are always reliably extracted
-  // Format: IP followed by 6-8 digits
-  var ipPat=/\b(IP\d{6,8})\b/g;
-  var ipMatches=[]; var im;
-  while((im=ipPat.exec(flat))!==null){
-    ipMatches.push({ipd:im[1],index:im.index,end:im.index+im[0].length});
-  }
-
-  if(!ipMatches.length){
-    setPdfStatus('No IP registration numbers found. Please verify this is a Bed Occupancy PDF.','se');
-    return;
-  }
-
-  // For each IP number, look BEFORE it for OPD number and date,
-  // and AFTER it for name, gender, age, diagnosis, DOA, bed
-  for(var i=0;i<ipMatches.length;i++){
-    var ipd=ipMatches[i].ipd;
-
-    // Look back up to 60 chars before IP for OPD number (9-12 digits)
-    var before=flat.substring(Math.max(0,ipMatches[i].index-80),ipMatches[i].index);
-    var opdM=before.match(/(\d{9,12})\s*$/);
-    var opd=opdM?opdM[1]:'';
-
-    // DOA from before segment — date dd.mm.yyyy
-    var dateM=before.match(/(\d{2}\.\d{2}\.\d{4})/);
-    var admDateRaw=dateM?dateM[0]:'';
-
-    // Segment after IP number up to next IP number
-    var segEnd=ipMatches[i+1]?ipMatches[i+1].index:flat.length;
-    var seg=flat.substring(ipMatches[i].end,segEnd).trim();
-
-    // Extract Gender
-    var gm=seg.match(/\b(Male|Female)\b/i);
-    var gender=gm?gm[0]:'Male';
-    var gi=gm?seg.indexOf(gm[0]):-1;
-
-    // Name = everything before gender
-    var name=gi>-1?seg.substring(0,gi).trim().replace(/\s+/g,' '):'(verify)';
-
-    // After gender: age
-    var afterG=gi>-1?seg.substring(gi+gender.length).trim():seg;
-    var ageM=afterG.match(/^(\d{1,3})\b/);
-    var age=ageM?ageM[1]:'';
-    var rem=ageM?afterG.substring(ageM[0].length).trim():afterG;
-
-    // DOA in remainder (dd.mm.yyyy)
-    var doaDates=rem.match(/\d{2}\.\d{2}\.\d{4}/g)||[];
-    var doa=doaDates.length?parseDMY(doaDates[0]):parseDMY(admDateRaw);
-
-    // Bed number — 2-3 uppercase letters + 2-4 digits at end of segment
-    var bedM=rem.match(/\b([A-Z]{2,3}\d{2,4})\s*$/);
-    var bed=bedM?bedM[1]:'';
-
-    // Diagnosis — uppercase words before the first date or bed number
-    var doaRaw=doaDates.length?doaDates[0]:'';
-    var cutoff=doaRaw?rem.indexOf(doaRaw):rem.indexOf(bed);
-    if(cutoff<0)cutoff=rem.length;
-    var diagSrc=rem.substring(0,cutoff).trim();
-    var toks=diagSrc.split(/\s+/);
-    var diagT=[];
-    for(var ti=0;ti<toks.length;ti++){
-      var tok=toks[ti];
-      if(tok.length>1 && /^[A-Z]+$/.test(tok)) diagT.push(tok);
-      else if(diagT.length>0) break;
+  // Find all IP numbers
+  var ipPat = /\b(IP\d{6,8})\b/g;
+  var ipMatches = [];
+  var im;
+  while ((im = ipPat.exec(flat)) !== null) {
+    if (!seen[im[1]]) {
+      seen[im[1]] = true;
+      ipMatches.push({ipd: im[1], index: im.index, end: im.index + im[0].length});
     }
-    var diag=diagT.join(' ').trim()||diagSrc.substring(0,35).trim();
-
-    rows.push({
-      sl:i+1, opd:opd, ipd:ipd,
-      name:name, gender:gender, age:age,
-      diag:diag, doa:doa, bed:bed, ward:detWard
-    });
   }
 
-  if(!rows.length){
-    setPdfStatus('Could not extract patient details. Please check the PDF format.','se');
+  if (!ipMatches.length) {
+    setPdfStatus('No IP numbers found. Please verify this is a Bed Occupancy PDF.', 'se');
     return;
   }
 
-  impRows=rows;
-  var opts=WARDS.map(function(w){return'<option'+(w===detWard?' selected':'')+'>'+w+'</option>';}).join('');
-  el('wardMapRows').innerHTML='<div class="wmap-row"><span style="font-weight:600;min-width:180px">Detected: <b>'+detWard+'</b></span><span>Map to:</span><select id="wMapSel">'+opts+'</select><button class="btn btn-warning btn-sm" onclick="applyWMap()">Apply</button></div>';
-  el('wardMapSec').style.display='block';
-  el('impDateSec').style.display='block';
-  renderImpTable(rows);
-  el('impPrevSec').style.display='block';
-  el('impCount').textContent=rows.length+' patients extracted';
-  setPdfStatus('Extracted '+rows.length+' patient record(s). Review below and click Import.','ss');
-}
+  for (var i = 0; i < ipMatches.length; i++) {
+    var ipd = ipMatches[i].ipd;
+    var before = flat.substring(Math.max(0, ipMatches[i].index - 120), ipMatches[i].index);
+    var opdM = before.match(/(\d{9,12})\s*$/);
+    var opd = opdM ? opdM[1] : '';
+    var dateInBefore = before.match(/(\d{2}\.\d{2}\.\d{4})/);
+    var admDateRaw = dateInBefore ? dateInBefore[0] : '';
 
-function applyWMap(){
-  var w=el('wMapSel').value;
-  impRows.forEach(function(r){r.ward=w;});
-  renderImpTable(impRows);
-}
-function applyDefDays(){
-  var d=parseInt(el('impDays').value)||7; var dt=el('impDiet').value||'Regular';
-  document.querySelectorAll('.idays').forEach(function(x){x.value=d;});
-  document.querySelectorAll('.idiet').forEach(function(x){x.value=dt;});
-}
-function renderImpTable(rows){
-  var dd=parseInt((el('impDays')||{}).value)||7;
-  el('impTbl').innerHTML=rows.map(function(r,i){
-    var wo=WARDS.map(function(w){return'<option'+(r.ward===w?' selected':'')+'>'+w+'</option>';}).join('');
-    return'<tr class="imp-row">'+
-      '<td><input type="checkbox" class="impChk" checked value="'+i+'" style="width:auto;margin-bottom:0"></td>'+
-      '<td>'+r.sl+'</td>'+
-      '<td><input value="'+r.opd+'" style="width:100px" data-i="'+i+'" data-f="opd"></td>'+
-      '<td><input value="'+r.ipd+'" style="width:90px" data-i="'+i+'" data-f="ipd"></td>'+
-      '<td><input value="'+r.name+'" style="width:140px" data-i="'+i+'" data-f="name"></td>'+
-      '<td><select class="igen" data-i="'+i+'" style="width:75px;margin-bottom:0"><option'+(r.gender==='Male'?' selected':'')+'>Male</option><option'+(r.gender==='Female'?' selected':'')+'>Female</option></select></td>'+
-      '<td><input value="'+r.age+'" style="width:38px" data-i="'+i+'" data-f="age"></td>'+
-      '<td><input value="'+r.diag+'" style="width:120px" data-i="'+i+'" data-f="diag"></td>'+
-      '<td><input value="'+r.bed+'" style="width:50px" data-i="'+i+'" data-f="bed"></td>'+
-      '<td><input type="date" value="'+r.doa+'" style="width:125px" data-i="'+i+'" data-f="doa"></td>'+
-      '<td><select class="iward" data-i="'+i+'" style="width:150px;margin-bottom:0">'+wo+'</select></td>'+
-      '<td><input type="number" class="idays" value="'+dd+'" min="1" max="15" style="width:42px" data-i="'+i+'"></td>'+
-      '<td><input class="idiet" value="Regular" style="width:85px" data-i="'+i+'"></td>'+
-      '</tr>';
-  }).join('');
-}
-function selAllImp(v){document.querySelectorAll('.impChk').forEach(function(c){c.checked=v;});}
-function doImport(){
-  var chk=Array.from(document.querySelectorAll('.impChk:checked')).map(function(c){return parseInt(c.value);});
-  if(!chk.length){alert('Select at least one patient.');return;}
-  var ok=0,sk=0;
-  chk.forEach(function(idx){
-    function gv(f){var x=document.querySelector('input[data-i="'+idx+'"][data-f="'+f+'"]');return x?x.value.trim():'';}
-    var name=gv('name'),ipd=gv('ipd');
-    var days=parseInt((document.querySelector('.idays[data-i="'+idx+'"]')||{}).value)||7;
-    var ward=(document.querySelector('.iward[data-i="'+idx+'"]')||{}).value||detWard;
-    var gender=(document.querySelector('.igen[data-i="'+idx+'"]')||{}).value||'';
-    var diet=(document.querySelector('.idiet[data-i="'+idx+'"]')||{}).value||'Regular';
-    if(!name||!ipd){sk++;return;}
-    if(patients.find(function(p){return p.ipd===ipd&&p.admitted;})){sk++;return;}
+    var segEnd = ipMatches[i+1] ? ipMatches[i+1].index : flat.length;
+    var seg = flat.substring(ipMatches[i].end, segEnd).trim();
 
-    // Get DOA from the date input — it will be in yyyy-mm-dd from the date picker
-    var doaRaw=gv('doa');
-    // If empty or invalid, use today
-    var doa=today();
-    if(doaRaw && doaRaw.length>=8){
-      // Check if it came through as dd.mm.yyyy and convert
-      var ddmmyyyy=doaRaw.match(/^(\d{1,2})[.\-\/](\d{1,2})[.\-\/](\d{4})$/);
-      if(ddmmyyyy){
-        doa=ddmmyyyy[3]+'-'+ddmmyyyy[2].padStart(2,'0')+'-'+ddmmyyyy[1].padStart(2,'0');
-      } else {
-        doa=doaRaw; // already yyyy-mm-dd from date input
+    // Gender
+    var gm = seg.match(/\b(Female|Male)\b/i);
+    var gender = gm ? gm[0] : 'Male';
+    var gi = gm ? seg.indexOf(gm[0]) : -1;
+    var name = gi > -1 ? seg.substring(0, gi).trim().replace(/\s+/g, ' ') : '(verify)';
+
+    // Age
+    var afterG = gi > -1 ? seg.substring(gi + gender.length).trim() : seg;
+    var ageM = afterG.match(/^(\d{1,3})\b/);
+    var age = ageM ? ageM[1] : '';
+    var rem = ageM ? afterG.substring(ageM[0].length).trim() : afterG;
+
+    // Ward from department keywords
+    var ward = 'Kayachikitsa';
+    var depts = ['KAYA CHIKITSA','SHALYA TANTRA','SHALAKYA TANTRA','PANCHA KARMA','KAUMARA BRUTYA','KAUMARA BHRITYA','PRASOOTI TANTRA','PRASUTI TANTRA'];
+    var bestIdx = -1; var bestDept = '';
+    for (var dp = 0; dp < depts.length; dp++) {
+      var dpi = rem.toUpperCase().indexOf(depts[dp]);
+      if (dpi > -1 && (bestIdx === -1 || dpi < bestIdx)) {
+        bestIdx = dpi; bestDept = depts[dp];
       }
     }
+    if (bestDept) ward = mapDept(bestDept);
 
-    var disDate=addDays(doa,days-1);
-    var p={
-      id:Date.now().toString()+'_'+idx,
-      name:name,ipd:ipd,opd:gv('opd'),ward:ward,
-      bed:gv('bed'),
-      age:gv('age')+(gender?' / '+gender:''),
-      diag:gv('diag'),dietType:diet,
-      admDate:doa,      // always yyyy-mm-dd
-      disDate:disDate,  // always yyyy-mm-dd
-      days:days,admitted:true
+    // DOA — last date in segment
+    var allDates = rem.match(/\d{2}\.\d{2}\.\d{4}/g) || [];
+    var doa = allDates.length ? parseDMY(allDates[allDates.length - 1]) : parseDMY(admDateRaw);
+    if (!doa) doa = today();
+
+    // Diagnosis — text after dept keyword, before last date, stripping DR names
+    var diag = '';
+    if (bestIdx > -1) {
+      var afterDept = rem.substring(bestIdx + bestDept.length).trim();
+      afterDept = afterDept.replace(/\bDR\.?\s+[A-Z][A-Za-z\s]{1,25}/g, '').trim();
+      var lastDateStr = allDates.length ? allDates[allDates.length - 1] : '';
+      var diagEnd = lastDateStr ? afterDept.lastIndexOf(lastDateStr) : afterDept.length;
+      if (diagEnd < 0) diagEnd = afterDept.length;
+      diag = afterDept.substring(0, diagEnd).replace(/\bDOD\b/gi,'').trim().replace(/\s+/g,' ');
+      if (diag.length > 60) diag = diag.substring(0, 60);
+    }
+
+    rows.push({sl: i+1, opd: opd, ipd: ipd, name: name, gender: gender, age: age, diag: diag, doa: doa, ward: ward});
+  }
+
+  if (!rows.length) { setPdfStatus('Could not extract patient details.', 'se'); return; }
+
+  impRows = rows;
+  el('wardMapRows').innerHTML = '<div class="wmap-row"><b>Ward auto-detected per patient from DEPARTMENT column. Edit in preview if needed.</b></div>';
+  el('wardMapSec').style.display = 'block';
+  el('impDateSec').style.display = 'block';
+  renderImpTable(rows);
+  el('impPrevSec').style.display = 'block';
+  el('impCount').textContent = rows.length + ' patients extracted';
+  setPdfStatus('Extracted ' + rows.length + ' patient record(s). Review and click Import.', 'ss');
+}
+
+function applyDefDays() {
+  var d = parseInt(el('impDays').value) || 7;
+  var dt = el('impDiet').value || 'Regular';
+  document.querySelectorAll('.idays').forEach(function(x) { x.value = d; });
+  document.querySelectorAll('.idiet').forEach(function(x) { x.value = dt; });
+}
+
+function renderImpTable(rows) {
+  var dd = parseInt((el('impDays') || {}).value) || 7;
+  var h = '';
+  for (var i = 0; i < rows.length; i++) {
+    var r = rows[i];
+    var wo = '';
+    for (var wi = 0; wi < WARDS.length; wi++) {
+      wo += '<option' + (r.ward === WARDS[wi] ? ' selected' : '') + '>' + WARDS[wi] + '</option>';
+    }
+    h += '<tr class="imp-row">' +
+      '<td><input type="checkbox" class="impChk" checked value="' + i + '" style="width:auto;margin-bottom:0"></td>' +
+      '<td>' + r.sl + '</td>' +
+      '<td><input value="' + r.opd + '" style="width:100px" data-i="' + i + '" data-f="opd"></td>' +
+      '<td><input value="' + r.ipd + '" style="width:90px" data-i="' + i + '" data-f="ipd"></td>' +
+      '<td><input value="' + r.name + '" style="width:140px" data-i="' + i + '" data-f="name"></td>' +
+      '<td><select class="igen" data-i="' + i + '" style="width:75px;margin-bottom:0"><option' + (r.gender==='Male'?' selected':'') + '>Male</option><option' + (r.gender==='Female'?' selected':'') + '>Female</option></select></td>' +
+      '<td><input value="' + r.age + '" style="width:38px" data-i="' + i + '" data-f="age"></td>' +
+      '<td><input value="' + r.diag + '" style="width:120px" data-i="' + i + '" data-f="diag"></td>' +
+      '<td><input type="date" value="' + r.doa + '" style="width:125px" data-i="' + i + '" data-f="doa"></td>' +
+      '<td><select class="iward" data-i="' + i + '" style="width:150px;margin-bottom:0">' + wo + '</select></td>' +
+      '<td><input type="number" class="idays" value="' + dd + '" min="1" max="15" style="width:42px" data-i="' + i + '"></td>' +
+      '<td><input class="idiet" value="Regular" style="width:85px" data-i="' + i + '"></td>' +
+      '</tr>';
+  }
+  el('impTbl').innerHTML = h;
+}
+
+function selAllImp(v) { document.querySelectorAll('.impChk').forEach(function(c) { c.checked = v; }); }
+
+function doImport() {
+  var chk = Array.from(document.querySelectorAll('.impChk:checked')).map(function(c) { return parseInt(c.value); });
+  if (!chk.length) { alert('Select at least one patient.'); return; }
+  var ok = 0; var sk = 0;
+  for (var ci = 0; ci < chk.length; ci++) {
+    var idx = chk[ci];
+    function gv(idx2, f) { var x = document.querySelector('input[data-i="' + idx2 + '"][data-f="' + f + '"]'); return x ? x.value.trim() : ''; }
+    var name = gv(idx, 'name'); var ipd = gv(idx, 'ipd');
+    var doaRaw = gv(idx, 'doa');
+    var doa = fixDate(doaRaw) || today();
+    var days = parseInt((document.querySelector('.idays[data-i="' + idx + '"]') || {}).value) || 7;
+    var ward = (document.querySelector('.iward[data-i="' + idx + '"]') || {}).value || 'Kayachikitsa';
+    var gender = (document.querySelector('.igen[data-i="' + idx + '"]') || {}).value || '';
+    var diet = (document.querySelector('.idiet[data-i="' + idx + '"]') || {}).value || 'Regular';
+    if (!name || !ipd) { sk++; continue; }
+    var dup = false;
+    for (var pi = 0; pi < patients.length; pi++) { if (patients[pi].ipd === ipd && patients[pi].admitted) { dup = true; break; } }
+    if (dup) { sk++; continue; }
+    var p = {
+      id: Date.now().toString() + '_' + idx,
+      name: name, ipd: ipd, opd: gv(idx, 'opd'), ward: ward,
+      bed: gv(idx, 'bed'), age: gv(idx, 'age') + (gender ? ' / ' + gender : ''),
+      diag: gv(idx, 'diag'), dietType: diet,
+      admDate: doa, disDate: addDays(doa, days - 1),
+      days: days, admitted: true
     };
     patients.push(p); genSched(p); ok++;
-  });
-  saveAll();
-  if(ok>0){
-    el('wardMapSec').style.display='none';
-    el('impDateSec').style.display='none';
-    el('impPrevSec').style.display='none';
-    el('pdfFile').value='';
-    setPdfStatus(ok+' patient(s) imported! Now click the Diet Register tab, select the admission date and click View.','ss');
   }
-  alert(ok+' patient(s) imported.'+(sk?' '+sk+' skipped.':''));
+  saveAll();
+  if (ok > 0) {
+    el('wardMapSec').style.display = 'none';
+    el('impDateSec').style.display = 'none';
+    el('impPrevSec').style.display = 'none';
+    el('pdfFile').value = '';
+    setPdfStatus(ok + ' patient(s) imported! Go to Diet Register tab, select admission date and click View.', 'ss');
+  }
+  alert(ok + ' patient(s) imported.' + (sk ? ' ' + sk + ' skipped.' : ''));
 }
 
-// ======== DIET REGISTER ========
-function renderRegister(){
-  var dt=el('regFrom').value||today();
-  var wf=el('regWard').value||'';
-  var dayPts=[];
-  var debugInfo='<div style="background:#fff3cd;padding:10px;margin-bottom:10px;font-size:12px;border-radius:6px">';
-  debugInfo+='<b>Debug Info:</b><br>';
-  debugInfo+='Selected date: <b>'+dt+'</b><br>';
-  debugInfo+='Total patients in system: <b>'+patients.length+'</b><br>';
-  for(var i=0;i<patients.length;i++){
-    var p=patients[i];
-    debugInfo+='Patient: '+p.name+' | admitted:'+p.admitted+' | admDate:'+p.admDate+' | disDate:'+p.disDate+' | ward:'+p.ward+'<br>';
-    if(p.admitted && p.admDate<=dt && p.disDate>=dt && (!wf||p.ward===wf)){
-      dayPts.push(p);
-    }
+// DIET REGISTER
+function mealOpts(ml, sel) {
+  var h = '<option value="">-- Select --</option>';
+  for (var i = 0; i < SI[ml].length; i++) {
+    h += '<option' + (sel === SI[ml][i] ? ' selected' : '') + '>' + SI[ml][i] + '</option>';
   }
-  debugInfo+='Matched patients: <b>'+dayPts.length+'</b></div>';
+  return h;
+}
 
-  if(!dayPts.length){
-    el('regContent').innerHTML=debugInfo+'<p style="color:#999;padding:20px;text-align:center">No patients admitted on '+fmtD(dt)+'.</p>';
+function updMeal(dt, pid, ml, val) {
+  if (!schedules[dt]) schedules[dt] = {};
+  if (!schedules[dt][pid]) schedules[dt][pid] = {Breakfast:'',Lunch:'',Dinner:''};
+  schedules[dt][pid][ml] = val;
+  saveAll();
+}
+
+function renderRegister() {
+  var dt = el('regDate').value;
+  if (!dt) { alert('Please select a date.'); return; }
+  var wf = el('regWard').value || '';
+  var dtTs = new Date(dt + 'T00:00:00').getTime();
+  var dayPts = [];
+  for (var i = 0; i < patients.length; i++) {
+    var p = patients[i];
+    if (!p.admitted) continue;
+    var admTs = new Date(fixDate(p.admDate) + 'T00:00:00').getTime();
+    var disTs = new Date(fixDate(p.disDate) + 'T00:00:00').getTime();
+    if (admTs <= dtTs && disTs >= dtTs && (!wf || p.ward === wf)) dayPts.push(p);
+  }
+  if (!dayPts.length) {
+    el('regContent').innerHTML = '<p style="color:#999;padding:20px;text-align:center">No patients admitted on ' + fmtD(dt) + '. Please check the date.</p>';
     return;
   }
-  var out='<div class="hl">📅 <b>'+fmtD(dt)+'</b> ('+dayName(dt)+') — <b>'+dayPts.length+'</b> patients | <b>'+(dayPts.length*3)+'</b> meals</div>';
-  out+='<div style="overflow-x:auto"><table border="1" cellpadding="5" style="width:100%;border-collapse:collapse;font-size:12px">';
-  out+='<tr style="background:#1a5276;color:#fff"><th>#</th><th>IPD</th><th>Name</th><th>Ward</th><th>Age/Gender</th><th>Diagnosis</th><th>Diet Type</th><th>Breakfast</th><th>Lunch</th><th>Dinner</th></tr>';
-  for(var j=0;j<dayPts.length;j++){
-    var pt=dayPts[j];
-    var sc=(schedules[dt]&&schedules[dt][pt.id])||{Breakfast:'',Lunch:'',Dinner:''};
-    out+='<tr>';
-    out+='<td>'+(j+1)+'</td>';
-    out+='<td><b>'+pt.ipd+'</b></td>';
-    out+='<td>'+pt.name+'</td>';
-    out+='<td>'+pt.ward+'</td>';
-    out+='<td>'+(pt.age||'-')+'</td>';
-    out+='<td>'+(pt.diag||'-')+'</td>';
-    out+='<td>'+(pt.dietType||'Regular')+'</td>';
-    out+='<td><select onchange="updMeal(\''+dt+'\',\''+pt.id+'\',\'Breakfast\',this.value)">'+mealOpts('Breakfast',sc.Breakfast)+'</select></td>';
-    out+='<td><select onchange="updMeal(\''+dt+'\',\''+pt.id+'\',\'Lunch\',this.value)">'+mealOpts('Lunch',sc.Lunch)+'</select></td>';
-    out+='<td><select onchange="updMeal(\''+dt+'\',\''+pt.id+'\',\'Dinner\',this.value)">'+mealOpts('Dinner',sc.Dinner)+'</select></td>';
-    out+='</tr>';
+  var out = '<div class="hl">📅 <b>' + fmtD(dt) + '</b> (' + dayName(dt) + ') — <b>' + dayPts.length + '</b> patients | <b>' + (dayPts.length * 3) + '</b> meals</div>';
+  out += '<div style="overflow-x:auto"><table border="1" cellpadding="5" style="width:100%;border-collapse:collapse;font-size:12px">';
+  out += '<tr style="background:#1a5276;color:#fff"><th>#</th><th>IPD</th><th>Name</th><th>Ward</th><th>Age/Gender</th><th>Diagnosis</th><th>Diet</th><th>Breakfast</th><th>Lunch</th><th>Dinner</th></tr>';
+  for (var j = 0; j < dayPts.length; j++) {
+    var pt = dayPts[j];
+    var sc = (schedules[dt] && schedules[dt][pt.id]) || {Breakfast:'',Lunch:'',Dinner:''};
+    out += '<tr>' +
+      '<td>' + (j+1) + '</td>' +
+      '<td><b>' + pt.ipd + '</b></td>' +
+      '<td>' + pt.name + '</td>' +
+      '<td>' + pt.ward + '</td>' +
+      '<td>' + (pt.age||'-') + '</td>' +
+      '<td>' + (pt.diag||'-') + '</td>' +
+      '<td>' + (pt.dietType||'Regular') + '</td>' +
+      '<td><select onchange="updMeal(\'' + dt + '\',\'' + pt.id + '\',\'Breakfast\',this.value)">' + mealOpts('Breakfast', sc.Breakfast) + '</select></td>' +
+      '<td><select onchange="updMeal(\'' + dt + '\',\'' + pt.id + '\',\'Lunch\',this.value)">' + mealOpts('Lunch', sc.Lunch) + '</select></td>' +
+      '<td><select onchange="updMeal(\'' + dt + '\',\'' + pt.id + '\',\'Dinner\',this.value)">' + mealOpts('Dinner', sc.Dinner) + '</select></td>' +
+      '</tr>';
   }
-  out+='</table></div>';
-  el('regContent').innerHTML=out;
+  out += '</table></div>';
+  el('regContent').innerHTML = out;
 }
-function saveRegister(){
-  saveAll();
-  alert('Register saved!');
-}
-function printRegister(){
+
+function saveRegister() { saveAll(); alert('Register saved!'); }
+
+function printRegister() {
   saveRegister();
-  var dt=el('regFrom').value||today();
-  el('printArea').innerHTML='<style>body{font-family:Arial,sans-serif;font-size:11px}table{width:100%;border-collapse:collapse}th,td{border:1px solid #333;padding:4px}th{background:#1a5276;color:#fff}.hdr{text-align:center;margin-bottom:10px}select{display:none}</style><div class="hdr"><h2>Jain AGM Ayurvedic Medical College &amp; Hospital</h2><h3>DIET REGISTER — '+fmtD(dt)+'</h3></div>'+el('regContent').innerHTML;
+  var dt = el('regDate').value || today();
+  el('printArea').innerHTML = '<style>body{font-family:Arial,sans-serif;font-size:11px}table{width:100%;border-collapse:collapse}th,td{border:1px solid #333;padding:4px}th{background:#1a5276;color:#fff}.hdr{text-align:center;margin-bottom:10px}select{display:none}</style>' +
+    '<div class="hdr"><h2>Jain AGM Ayurvedic Medical College &amp; Hospital</h2><h3>DIET REGISTER — ' + fmtD(dt) + '</h3></div>' +
+    el('regContent').innerHTML;
   window.print();
 }
 
-// ======== DIET INDENT ========
-function updIndent(dt){
-  var pts=patients.filter(function(p){return p.admitted&&p.admDate<=dt&&p.disDate>=dt;});
-  var c={}; var sc=schedules[dt]||{};
-  pts.forEach(function(p){var ps=sc[p.id]||{}; MEALS.forEach(function(ml){var it=ps[ml]||'';if(it)c[it]=(c[it]||0)+1;});});
-  if(!indent[dt])indent[dt]={counts:c,ingredients:{}};
-  else indent[dt].counts=c;
-  saveAll();
+// DIET INDENT
+function getSug(item, n) {
+  if (item.indexOf('Rice') > -1) return (n*0.2).toFixed(1);
+  if (item.indexOf('Wheat') > -1 || item.indexOf('Rava') > -1) return (n*0.1).toFixed(1);
+  if (item.indexOf('Dal') > -1 || item.indexOf('Rajma') > -1) return (n*0.08).toFixed(1);
+  if (item.indexOf('Milk') > -1) return (n*0.3).toFixed(1);
+  if (item.indexOf('Oil') > -1) return (n*0.02).toFixed(2);
+  if (item.indexOf('Tomato') > -1 || item.indexOf('Onion') > -1) return (n*0.1).toFixed(1);
+  if (item.indexOf('Salt') > -1) return (n*0.01).toFixed(2);
+  if (item.indexOf('Ghee') > -1) return (n*0.01).toFixed(2);
+  if (item.indexOf('Coconut') > -1) return Math.ceil(n*0.05);
+  if (item.indexOf('Banana') > -1) return Math.ceil(n/12);
+  if (item.indexOf('Papad') > -1) return n;
+  if (item.indexOf('Mustard') > -1 || item.indexOf('Cumin') > -1 || item.indexOf('Turmeric') > -1 || item.indexOf('Tamarind') > -1) return (n*2).toFixed(0);
+  return '';
 }
-function getSug(item,n){
-  if(item.indexOf('Rice')>-1)return(n*0.2).toFixed(1);
-  if(item.indexOf('Wheat')>-1||item.indexOf('Rava')>-1)return(n*0.1).toFixed(1);
-  if(item.indexOf('Dal')>-1||item.indexOf('Rajma')>-1)return(n*0.08).toFixed(1);
-  if(item.indexOf('Milk')>-1)return(n*0.3).toFixed(1);
-  if(item.indexOf('Oil')>-1)return(n*0.02).toFixed(2);
-  if(item.indexOf('Tomato')>-1||item.indexOf('Onion')>-1)return(n*0.1).toFixed(1);
-  if(item.indexOf('Salt')>-1)return(n*0.01).toFixed(2);
-  if(item.indexOf('Ghee')>-1)return(n*0.01).toFixed(2);
-  if(item.indexOf('Coconut')>-1)return Math.ceil(n*0.05);
-  if(item.indexOf('Banana')>-1)return Math.ceil(n/12);
-  if(item.indexOf('Papad')>-1)return n;
-  if(item.indexOf('Tamarind')>-1||item.indexOf('Turmeric')>-1||item.indexOf('Mustard')>-1||item.indexOf('Cumin')>-1)return(n*2).toFixed(0);
-  return'';
+
+function renderIndent() {
+  var dt = el('indDate').value;
+  if (!dt) { alert('Please select a date.'); return; }
+  var dtTs = new Date(dt + 'T00:00:00').getTime();
+  var pts = [];
+  for (var i = 0; i < patients.length; i++) {
+    var p = patients[i];
+    if (!p.admitted) continue;
+    var admTs = new Date(fixDate(p.admDate) + 'T00:00:00').getTime();
+    var disTs = new Date(fixDate(p.disDate) + 'T00:00:00').getTime();
+    if (admTs <= dtTs && disTs >= dtTs) pts.push(p);
+  }
+  var n = pts.length;
+  var mc = {Breakfast:{},Lunch:{},Dinner:{}};
+  var sc = schedules[dt] || {};
+  for (var pi = 0; pi < pts.length; pi++) {
+    var ps = sc[pts[pi].id] || {};
+    var mn = menu[dayName(dt)] || {};
+    for (var mi = 0; mi < MEALS.length; mi++) {
+      var ml = MEALS[mi];
+      var item = ps[ml] || mn[ml] || '';
+      if (item) mc[ml][item] = (mc[ml][item] || 0) + 1;
+    }
+  }
+  var saved = (indent[dt] || {}).ingredients || {};
+  var h = '<div class="hl">📅 <b>' + fmtD(dt) + '</b> — <b>' + n + '</b> patients | <b>' + (n*3) + '</b> meals</div>';
+  h += '<div class="card"><h3>🍽️ Meal Summary</h3><div class="grid3">';
+  for (var mli = 0; mli < MEALS.length; mli++) {
+    var mln = MEALS[mli];
+    h += '<div><b style="color:#1a5276">' + mln + '</b><table style="margin-top:6px"><tr><th>Item</th><th>Count</th></tr>';
+    var ks = Object.keys(mc[mln]);
+    if (ks.length) { for (var ki = 0; ki < ks.length; ki++) h += '<tr><td>' + ks[ki] + '</td><td><b>' + mc[mln][ks[ki]] + '</b></td></tr>'; }
+    else h += '<tr><td colspan="2" style="color:#999">No entries</td></tr>';
+    h += '</table></div>';
+  }
+  h += '</div></div>';
+  h += '<div class="card"><h3>📦 Ingredient Indent — ' + n + ' patients</h3>';
+  h += '<div style="overflow-x:auto"><table><thead><tr><th>Category</th><th>Ingredient</th><th>Suggested Qty</th><th>Ordered Qty</th><th>Unit</th><th>Remarks</th></tr></thead><tbody>';
+  var cats = Object.keys(ICATS);
+  for (var ci = 0; ci < cats.length; ci++) {
+    var cat = cats[ci]; var items = ICATS[cat];
+    for (var ii = 0; ii < items.length; ii++) {
+      var itm = items[ii];
+      var um = itm.match(/\(([^)]+)\)/); var unit = um ? um[1] : '';
+      var iname = itm.replace(/\([^)]+\)/,'').trim();
+      var sug = getSug(iname, n);
+      var sv = saved[itm] || {};
+      h += '<tr>';
+      if (ii === 0) h += '<td rowspan="' + items.length + '" style="font-weight:700;color:#1a5276;vertical-align:middle">' + cat + '</td>';
+      h += '<td>' + iname + '</td><td style="color:#666">' + sug + '</td>';
+      h += '<td><input class="iq" data-item="' + itm + '" value="' + (sv.qty||sug) + '" style="width:80px;padding:4px;border:1px solid #ccc;border-radius:4px"></td>';
+      h += '<td>' + unit + '</td>';
+      h += '<td><input class="ir" data-item="' + itm + '" value="' + (sv.remarks||'') + '" placeholder="Notes..." style="padding:4px;border:1px solid #ccc;border-radius:4px"></td>';
+      h += '</tr>';
+    }
+  }
+  h += '</tbody></table></div></div>';
+  el('indContent').innerHTML = h;
 }
-function renderIndent(){
-  var dates=getRange('indFrom','indTo');
-  dates.forEach(function(dt){updIndent(dt);});
-  var mc={Breakfast:{},Lunch:{},Dinner:{}}; var tot=0; var maxN=0;
-  dates.forEach(function(dt){
-    var pts=patients.filter(function(p){return p.admitted&&p.admDate<=dt&&p.disDate>=dt;});
-    if(pts.length>maxN)maxN=pts.length;
-    var sc=schedules[dt]||{};
-    pts.forEach(function(p){
-      var ps=sc[p.id]||{};
-      MEALS.forEach(function(ml){
-        var mn=menu[dayName(dt)]||{}; var it=ps[ml]||mn[ml]||'';
-        if(it){mc[ml][it]=(mc[ml][it]||0)+1;tot++;}
-      });
-    });
-  });
-  var n=maxN||1; var nd=dates.length;
-  var f=fmtD(dates[0]),t2=fmtD(dates[nd-1]);
-  var rl=nd===1?'<b>'+f+'</b>':'<b>'+f+'</b> to <b>'+t2+'</b> ('+nd+' days)';
-  var saved=(indent[dates[0]]||{}).ingredients||{};
-  var h='<div class="hl">📅 '+rl+' | <b>'+n+'</b> max patients/day | <b>'+tot+'</b> total meals</div>';
-  h+='<div class="card"><h3>🍽️ Meal Summary</h3><div class="grid3">';
-  MEALS.forEach(function(ml){
-    h+='<div><b style="color:#1a5276">'+ml+'</b><table style="margin-top:6px"><tr><th>Item</th><th>Count</th></tr>';
-    var ks=Object.keys(mc[ml]);
-    if(ks.length)ks.forEach(function(it){h+='<tr><td>'+it+'</td><td><b>'+mc[ml][it]+'</b></td></tr>';});
-    else h+='<tr><td colspan="2" style="color:#999">No entries</td></tr>';
-    h+='</table></div>';
-  });
-  h+='</div></div>';
-  h+='<div class="card"><h3>📦 Ingredient Indent — '+n+' patients/day x '+nd+' day(s)</h3><p style="font-size:12px;color:#666;margin-bottom:10px">Edit as needed before printing.</p>';
-  h+='<div style="overflow-x:auto"><table><thead><tr><th>Category</th><th>Ingredient</th><th>Per Day</th><th>Total ('+nd+'d)</th><th>Ordered Qty</th><th>Unit</th><th>Remarks</th></tr></thead><tbody>';
-  Object.keys(ICATS).forEach(function(cat){
-    var items=ICATS[cat];
-    items.forEach(function(item,idx){
-      var um=item.match(/\(([^)]+)\)/); var unit=um?um[1]:'';
-      var iname=item.replace(/\([^)]+\)/,'').trim();
-      var pd=getSug(iname,n);
-      var totQ=pd?(parseFloat(pd)*nd).toFixed(String(pd).indexOf('.')>-1?1:0):'';
-      var sv=saved[item]||{};
-      h+='<tr>';
-      if(idx===0)h+='<td rowspan="'+items.length+'" style="font-weight:700;color:#1a5276;vertical-align:middle">'+cat+'</td>';
-      h+='<td>'+iname+'</td><td style="color:#666">'+pd+'</td><td style="color:#1e8449;font-weight:700">'+totQ+'</td>';
-      h+='<td><input class="ind-input iq" data-item="'+item+'" value="'+(sv.qty||totQ)+'"></td>';
-      h+='<td>'+unit+'</td><td><input class="ind-input ir" data-item="'+item+'" value="'+(sv.remarks||'')+'" placeholder="Notes..."></td></tr>';
-    });
-  });
-  h+='</tbody></table></div></div>';
-  el('indContent').innerHTML=h;
-}
-function saveIndent(){
-  var dates=getRange('indFrom','indTo'); var dt=dates[0];
-  if(!indent[dt])indent[dt]={counts:{},ingredients:{}};
-  document.querySelectorAll('.iq').forEach(function(x){var it=x.dataset.item;if(!indent[dt].ingredients[it])indent[dt].ingredients[it]={};indent[dt].ingredients[it].qty=x.value;});
-  document.querySelectorAll('.ir').forEach(function(x){var it=x.dataset.item;if(!indent[dt].ingredients[it])indent[dt].ingredients[it]={};indent[dt].ingredients[it].remarks=x.value;});
+
+function saveIndent() {
+  var dt = el('indDate').value || today();
+  if (!indent[dt]) indent[dt] = {counts:{},ingredients:{}};
+  document.querySelectorAll('.iq').forEach(function(x) { var it = x.dataset.item; if (!indent[dt].ingredients[it]) indent[dt].ingredients[it]={}; indent[dt].ingredients[it].qty = x.value; });
+  document.querySelectorAll('.ir').forEach(function(x) { var it = x.dataset.item; if (!indent[dt].ingredients[it]) indent[dt].ingredients[it]={}; indent[dt].ingredients[it].remarks = x.value; });
   saveAll(); alert('Indent saved!');
 }
 
-// ======== PRINT ========
-function printRegister(){
-  saveRegister();
-  var dates=getRange('regFrom','regTo');
-  var title=dates.length===1?'DIET REGISTER — '+fmtD(dates[0]):'DIET REGISTER — '+fmtD(dates[0])+' to '+fmtD(dates[dates.length-1]);
-  el('printArea').innerHTML='<style>body{font-family:Arial,sans-serif;font-size:11px}table{width:100%;border-collapse:collapse}th,td{border:1px solid #333;padding:4px}th{background:#1a5276;color:#fff}.hdr{text-align:center;margin-bottom:10px}select,input{display:none}.ward-hdr{background:#2e86c1;color:#fff;padding:4px 8px;font-weight:700;margin:6px 0}</style><div class="hdr"><h2>Jain AGM Ayurvedic Medical College &amp; Hospital</h2><h3>'+title+'</h3></div>'+el('regContent').innerHTML;
-  window.print();
-}
-function printIndent(){
+function printIndent() {
   saveIndent();
-  var dates=getRange('indFrom','indTo');
-  var title=dates.length===1?'DIET INDENT — '+fmtD(dates[0]):'DIET INDENT — '+fmtD(dates[0])+' to '+fmtD(dates[dates.length-1]);
-  el('printArea').innerHTML='<style>body{font-family:Arial,sans-serif;font-size:11px}table{width:100%;border-collapse:collapse}th,td{border:1px solid #333;padding:4px}th{background:#1a5276;color:#fff}.hdr{text-align:center;margin-bottom:10px}input{display:none}</style><div class="hdr"><h2>Jain AGM Ayurvedic Medical College &amp; Hospital</h2><h3>'+title+'</h3><p>Generated: '+new Date().toLocaleString('en-IN')+'</p></div>'+el('indContent').innerHTML;
-  window.print();
-}
-function printMenu(){
-  var rows=DAYS.map(function(d){return'<tr><td><b>'+d+'</b></td>'+MEALS.map(function(ml){return'<td>'+(menu[d]&&menu[d][ml]?menu[d][ml]:'-')+'</td>';}).join('')+'</tr>';}).join('');
-  el('printArea').innerHTML='<style>body{font-family:Arial,sans-serif;font-size:12px}table{width:100%;border-collapse:collapse}th,td{border:1px solid #333;padding:6px}th{background:#1a5276;color:#fff}.hdr{text-align:center;margin-bottom:12px}</style><div class="hdr"><h2>Jain AGM Ayurvedic Medical College &amp; Hospital</h2><h3>WEEKLY DIET MENU</h3></div><table><thead><tr><th>Day</th><th>Breakfast</th><th>Lunch</th><th>Dinner</th></tr></thead><tbody>'+rows+'</tbody></table>';
+  var dt = el('indDate').value || today();
+  el('printArea').innerHTML = '<style>body{font-family:Arial,sans-serif;font-size:11px}table{width:100%;border-collapse:collapse}th,td{border:1px solid #333;padding:4px}th{background:#1a5276;color:#fff}.hdr{text-align:center;margin-bottom:10px}input{display:none}</style>' +
+    '<div class="hdr"><h2>Jain AGM Ayurvedic Medical College &amp; Hospital</h2><h3>DIET INDENT — ' + fmtD(dt) + '</h3><p>Generated: ' + new Date().toLocaleString('en-IN') + '</p></div>' +
+    el('indContent').innerHTML;
   window.print();
 }
 
-// ======== INIT — runs after page fully loaded ========
-window.onload = function(){
-  // Fix any patients already saved with dd.mm.yyyy date format
-  var fixed=0;
-  for(var i=0;i<patients.length;i++){
-    var p=patients[i];
-    var admFix=fixDate(p.admDate);
-    var disFix=fixDate(p.disDate);
-    if(admFix!==p.admDate||disFix!==p.disDate){
-      p.admDate=admFix; p.disDate=disFix; fixed++;
+function printMenu() {
+  var rows = '';
+  for (var i = 0; i < DAYS.length; i++) {
+    var d = DAYS[i];
+    rows += '<tr><td><b>' + d + '</b></td>';
+    for (var mi = 0; mi < MEALS.length; mi++) {
+      rows += '<td>' + (menu[d] && menu[d][MEALS[mi]] ? menu[d][MEALS[mi]] : '-') + '</td>';
     }
+    rows += '</tr>';
   }
-  if(fixed>0){ saveAll(); }
-  el('dashDate').value=today();
-  el('pdfFile').addEventListener('change',function(){
-    if(this.files&&this.files[0]) handlePdfFile(this.files[0]);
+  el('printArea').innerHTML = '<style>body{font-family:Arial,sans-serif;font-size:12px}table{width:100%;border-collapse:collapse}th,td{border:1px solid #333;padding:6px}th{background:#1a5276;color:#fff}.hdr{text-align:center;margin-bottom:12px}</style>' +
+    '<div class="hdr"><h2>Jain AGM Ayurvedic Medical College &amp; Hospital</h2><h3>WEEKLY DIET MENU</h3></div>' +
+    '<table><thead><tr><th>Day</th><th>Breakfast</th><th>Lunch</th><th>Dinner</th></tr></thead><tbody>' + rows + '</tbody></table>';
+  window.print();
+}
+
+window.onload = function() {
+  // Fix any patients saved with wrong date format
+  for (var i = 0; i < patients.length; i++) {
+    patients[i].admDate = fixDate(patients[i].admDate);
+    patients[i].disDate = fixDate(patients[i].disDate);
+  }
+  saveAll();
+  el('dashDate').value = today();
+  el('pdfFile').addEventListener('change', function() {
+    if (this.files && this.files[0]) handlePdfFile(this.files[0]);
   });
   refreshDashboard();
 };
-// Convert any date format to yyyy-mm-dd
-function fixDate(s){
-  if(!s)return today();
-  // already yyyy-mm-dd
-  if(/^\d{4}-\d{2}-\d{2}$/.test(s))return s;
-  // dd.mm.yyyy or dd/mm/yyyy or dd-mm-yyyy
-  var m=s.match(/^(\d{1,2})[.\-\/](\d{1,2})[.\-\/](\d{4})$/);
-  if(m)return m[3]+'-'+m[2].padStart(2,'0')+'-'+m[1].padStart(2,'0');
-  return today();
-}
 </script>
 </body>
 </html>
