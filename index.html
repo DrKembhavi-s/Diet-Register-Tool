@@ -231,8 +231,7 @@ tr:hover td{background:#eaf4fb}
   <div class="card">
     <h3>📋 Diet Register</h3>
     <div class="flex" style="margin-bottom:12px">
-      <div><label>From Date</label><input type="date" id="regFrom" style="width:170px;margin-bottom:0"></div>
-      <div><label>To Date</label><input type="date" id="regTo" style="width:170px;margin-bottom:0"></div>
+      <div><label>Select Date</label><input type="date" id="regFrom" style="width:180px;margin-bottom:0"></div>
       <div><label>Ward</label>
         <select id="regWard" style="width:190px;margin-bottom:0">
           <option value="">All Wards</option>
@@ -333,7 +332,6 @@ function showTab(t){
   if(t==='patients') renderPtTable();
   if(t==='register'){
     el('regFrom').value=today();
-    el('regTo').value=today();
     el('regContent').innerHTML='<p style="color:#999;text-align:center;padding:20px">Select a date and click View.</p>';
   }
   if(t==='indent'){
@@ -463,44 +461,89 @@ function detectWard(txt){
 
 function parsePdf(text){
   detWard=detectWard(text);
+  // Flatten all text — PDF.js splits lines unpredictably
   var flat=text.replace(/[\r\n]+/g,' ').replace(/\s{2,}/g,' ');
   var rows=[];
-  var pat=/(\d{1,3})\s+(\d{2}\.\d{2}\.\d{4})\s+(\d{9,12})\s+(IP\d{6,8})\s+/gi;
-  var matches=[]; var m;
-  while((m=pat.exec(flat))!==null){
-    matches.push({index:m.index,end:m.index+m[0].length,sl:m[1],date:m[2],opd:m[3],ipd:m[4]});
+
+  // Anchor on IP numbers — these are always reliably extracted
+  // Format: IP followed by 6-8 digits
+  var ipPat=/\b(IP\d{6,8})\b/g;
+  var ipMatches=[]; var im;
+  while((im=ipPat.exec(flat))!==null){
+    ipMatches.push({ipd:im[1],index:im.index,end:im.index+im[0].length});
   }
-  if(!matches.length){
-    // fallback: find IP numbers
-    var fp=/\b(IP\d{6,8})\b/gi; var fm;
-    while((fm=fp.exec(flat))!==null){matches.push({index:fm.index,end:fm.index+fm[0].length,sl:matches.length+1,date:'',opd:'',ipd:fm[1]});}
+
+  if(!ipMatches.length){
+    setPdfStatus('No IP registration numbers found. Please verify this is a Bed Occupancy PDF.','se');
+    return;
   }
-  if(!matches.length){setPdfStatus('No patient records found. Please verify this is a Bed Occupancy PDF.','se');return;}
-  for(var i=0;i<matches.length;i++){
-    var seg=flat.substring(matches[i].end,matches[i+1]?matches[i+1].index:flat.length).trim();
+
+  // For each IP number, look BEFORE it for OPD number and date,
+  // and AFTER it for name, gender, age, diagnosis, DOA, bed
+  for(var i=0;i<ipMatches.length;i++){
+    var ipd=ipMatches[i].ipd;
+
+    // Look back up to 60 chars before IP for OPD number (9-12 digits)
+    var before=flat.substring(Math.max(0,ipMatches[i].index-80),ipMatches[i].index);
+    var opdM=before.match(/(\d{9,12})\s*$/);
+    var opd=opdM?opdM[1]:'';
+
+    // DOA from before segment — date dd.mm.yyyy
+    var dateM=before.match(/(\d{2}\.\d{2}\.\d{4})/);
+    var admDateRaw=dateM?dateM[0]:'';
+
+    // Segment after IP number up to next IP number
+    var segEnd=ipMatches[i+1]?ipMatches[i+1].index:flat.length;
+    var seg=flat.substring(ipMatches[i].end,segEnd).trim();
+
+    // Extract Gender
     var gm=seg.match(/\b(Male|Female)\b/i);
-    var gender=gm?gm[0]:'';
+    var gender=gm?gm[0]:'Male';
     var gi=gm?seg.indexOf(gm[0]):-1;
-    var name=gi>-1?seg.substring(0,gi).trim().replace(/\s+/g,' '):'';
-    var after=gi>-1?seg.substring(gi+gender.length).trim():seg;
-    var am=after.match(/^(\d{1,3})\s+(.*)/);
-    var age=am?am[1]:''; var rem=am?am[2].trim():after;
-    var dates=rem.match(/\d{2}\.\d{2}\.\d{4}/g)||[];
-    var doa=dates.length>0?parseDMY(dates[0]):parseDMY(matches[i].date);
-    var bedM=rem.match(/\b([A-Z]{2,3}\d{2,4})\b(?!.*\b[A-Z]{2,3}\d{2,4}\b)/);
+
+    // Name = everything before gender
+    var name=gi>-1?seg.substring(0,gi).trim().replace(/\s+/g,' '):'(verify)';
+
+    // After gender: age
+    var afterG=gi>-1?seg.substring(gi+gender.length).trim():seg;
+    var ageM=afterG.match(/^(\d{1,3})\b/);
+    var age=ageM?ageM[1]:'';
+    var rem=ageM?afterG.substring(ageM[0].length).trim():afterG;
+
+    // DOA in remainder (dd.mm.yyyy)
+    var doaDates=rem.match(/\d{2}\.\d{2}\.\d{4}/g)||[];
+    var doa=doaDates.length?parseDMY(doaDates[0]):parseDMY(admDateRaw);
+
+    // Bed number — 2-3 uppercase letters + 2-4 digits at end of segment
+    var bedM=rem.match(/\b([A-Z]{2,3}\d{2,4})\s*$/);
     var bed=bedM?bedM[1]:'';
-    var doaRaw=dates.length>0?dates[0]:'';
-    var diagEnd=doaRaw?rem.indexOf(doaRaw):(bed?rem.indexOf(bed):rem.length);
-    if(diagEnd<0)diagEnd=rem.length;
-    var diagSrc=rem.substring(0,diagEnd).trim();
-    var toks=diagSrc.split(/\s+/); var diagT=[]; var inA=false;
-    toks.forEach(function(t){if(!inA&&t.length>1&&/^[A-Z][A-Z\s]*$/.test(t))diagT.push(t);else if(diagT.length>0)inA=true;});
-    var diag=diagT.join(' ').trim()||diagSrc.substring(0,40).trim();
-    if(matches[i].ipd&&(name||gender)){
-      rows.push({sl:matches[i].sl,opd:matches[i].opd,ipd:matches[i].ipd,name:name||'(verify)',gender:gender||'Male',age:age,diag:diag,doa:doa,bed:bed,ward:detWard});
+
+    // Diagnosis — uppercase words before the first date or bed number
+    var doaRaw=doaDates.length?doaDates[0]:'';
+    var cutoff=doaRaw?rem.indexOf(doaRaw):rem.indexOf(bed);
+    if(cutoff<0)cutoff=rem.length;
+    var diagSrc=rem.substring(0,cutoff).trim();
+    var toks=diagSrc.split(/\s+/);
+    var diagT=[];
+    for(var ti=0;ti<toks.length;ti++){
+      var tok=toks[ti];
+      if(tok.length>1 && /^[A-Z]+$/.test(tok)) diagT.push(tok);
+      else if(diagT.length>0) break;
     }
+    var diag=diagT.join(' ').trim()||diagSrc.substring(0,35).trim();
+
+    rows.push({
+      sl:i+1, opd:opd, ipd:ipd,
+      name:name, gender:gender, age:age,
+      diag:diag, doa:doa, bed:bed, ward:detWard
+    });
   }
-  if(!rows.length){setPdfStatus('Could not extract patient details. Please check the PDF format.','se');return;}
+
+  if(!rows.length){
+    setPdfStatus('Could not extract patient details. Please check the PDF format.','se');
+    return;
+  }
+
   impRows=rows;
   var opts=WARDS.map(function(w){return'<option'+(w===detWard?' selected':'')+'>'+w+'</option>';}).join('');
   el('wardMapRows').innerHTML='<div class="wmap-row"><span style="font-weight:600;min-width:180px">Detected: <b>'+detWard+'</b></span><span>Map to:</span><select id="wMapSel">'+opts+'</select><button class="btn btn-warning btn-sm" onclick="applyWMap()">Apply</button></div>';
@@ -574,63 +617,50 @@ function doImport(){
 
 // ======== DIET REGISTER ========
 function renderRegister(){
-  var from=el('regFrom').value||today();
-  var to=el('regTo').value||from;
-  if(to<from)to=from;
+  var dt=el('regFrom').value||today();
   var wf=el('regWard').value||'';
-  var out='';
-  var cur=from;
-  var safety=0;
-  while(cur<=to && safety<32){
-    safety++;
-    var dt=cur;
-    cur=addDays(cur,1);
-    var dayPts=[];
-    for(var i=0;i<patients.length;i++){
-      var p=patients[i];
-      if(p.admitted && p.admDate<=dt && p.disDate>=dt && (!wf||p.ward===wf)){
-        dayPts.push(p);
-      }
+  var dayPts=[];
+  for(var i=0;i<patients.length;i++){
+    var p=patients[i];
+    if(p.admitted && p.admDate<=dt && p.disDate>=dt && (!wf||p.ward===wf)){
+      dayPts.push(p);
     }
-    if(!dayPts.length) continue;
-    out+='<div style="border:1px solid #d6eaf8;border-radius:8px;margin-bottom:12px">';
-    out+='<div style="background:#eaf4fb;padding:8px 14px;font-weight:700;color:#1a5276">📅 '+fmtD(dt)+' ('+dayName(dt)+') — '+dayPts.length+' patients</div>';
-    out+='<div style="padding:8px;overflow-x:auto"><table border="1" cellpadding="5" style="width:100%;border-collapse:collapse;font-size:12px">';
-    out+='<tr style="background:#1a5276;color:#fff"><th>#</th><th>IPD</th><th>Name</th><th>Ward</th><th>Diagnosis</th><th>Breakfast</th><th>Lunch</th><th>Dinner</th></tr>';
-    for(var j=0;j<dayPts.length;j++){
-      var pt=dayPts[j];
-      var sc=schedules[dt]&&schedules[dt][pt.id]?schedules[dt][pt.id]:{Breakfast:'',Lunch:'',Dinner:''};
-      out+='<tr>';
-      out+='<td>'+(j+1)+'</td>';
-      out+='<td>'+pt.ipd+'</td>';
-      out+='<td>'+pt.name+'</td>';
-      out+='<td>'+pt.ward+'</td>';
-      out+='<td>'+(pt.diag||'-')+'</td>';
-      out+='<td><select onchange="updMeal(\''+dt+'\',\''+pt.id+'\',\'Breakfast\',this.value)">'+mealOpts('Breakfast',sc.Breakfast)+'</select></td>';
-      out+='<td><select onchange="updMeal(\''+dt+'\',\''+pt.id+'\',\'Lunch\',this.value)">'+mealOpts('Lunch',sc.Lunch)+'</select></td>';
-      out+='<td><select onchange="updMeal(\''+dt+'\',\''+pt.id+'\',\'Dinner\',this.value)">'+mealOpts('Dinner',sc.Dinner)+'</select></td>';
-      out+='</tr>';
-    }
-    out+='</table></div></div>';
   }
-  el('regContent').innerHTML=out||'<p style="color:#999;padding:20px;text-align:center">No patients found for this date range.</p>';
-}
-function mealOpts(ml,sel){
-  var h='<option value="">--</option>';
-  for(var i=0;i<SI[ml].length;i++){
-    h+='<option'+(sel===SI[ml][i]?' selected':'')+'>'+SI[ml][i]+'</option>';
+  if(!dayPts.length){
+    el('regContent').innerHTML='<p style="color:#999;padding:20px;text-align:center">No patients admitted on '+fmtD(dt)+'.</p>';
+    return;
   }
-  return h;
-}
-function updMeal(dt,pid,ml,val){
-  if(!schedules[dt])schedules[dt]={};
-  if(!schedules[dt][pid])schedules[dt][pid]={Breakfast:'',Lunch:'',Dinner:''};
-  schedules[dt][pid][ml]=val;
-  saveAll();
+  var out='<div class="hl">📅 <b>'+fmtD(dt)+'</b> ('+dayName(dt)+') — <b>'+dayPts.length+'</b> patients | <b>'+(dayPts.length*3)+'</b> meals</div>';
+  out+='<div style="overflow-x:auto"><table border="1" cellpadding="5" style="width:100%;border-collapse:collapse;font-size:12px">';
+  out+='<tr style="background:#1a5276;color:#fff"><th>#</th><th>IPD</th><th>Name</th><th>Ward</th><th>Age/Gender</th><th>Diagnosis</th><th>Diet Type</th><th>Breakfast</th><th>Lunch</th><th>Dinner</th></tr>';
+  for(var j=0;j<dayPts.length;j++){
+    var pt=dayPts[j];
+    var sc=(schedules[dt]&&schedules[dt][pt.id])||{Breakfast:'',Lunch:'',Dinner:''};
+    out+='<tr>';
+    out+='<td>'+(j+1)+'</td>';
+    out+='<td><b>'+pt.ipd+'</b></td>';
+    out+='<td>'+pt.name+'</td>';
+    out+='<td>'+pt.ward+'</td>';
+    out+='<td>'+(pt.age||'-')+'</td>';
+    out+='<td>'+(pt.diag||'-')+'</td>';
+    out+='<td>'+(pt.dietType||'Regular')+'</td>';
+    out+='<td><select onchange="updMeal(\''+dt+'\',\''+pt.id+'\',\'Breakfast\',this.value)">'+mealOpts('Breakfast',sc.Breakfast)+'</select></td>';
+    out+='<td><select onchange="updMeal(\''+dt+'\',\''+pt.id+'\',\'Lunch\',this.value)">'+mealOpts('Lunch',sc.Lunch)+'</select></td>';
+    out+='<td><select onchange="updMeal(\''+dt+'\',\''+pt.id+'\',\'Dinner\',this.value)">'+mealOpts('Dinner',sc.Dinner)+'</select></td>';
+    out+='</tr>';
+  }
+  out+='</table></div>';
+  el('regContent').innerHTML=out;
 }
 function saveRegister(){
   saveAll();
   alert('Register saved!');
+}
+function printRegister(){
+  saveRegister();
+  var dt=el('regFrom').value||today();
+  el('printArea').innerHTML='<style>body{font-family:Arial,sans-serif;font-size:11px}table{width:100%;border-collapse:collapse}th,td{border:1px solid #333;padding:4px}th{background:#1a5276;color:#fff}.hdr{text-align:center;margin-bottom:10px}select{display:none}</style><div class="hdr"><h2>Jain AGM Ayurvedic Medical College &amp; Hospital</h2><h3>DIET REGISTER — '+fmtD(dt)+'</h3></div>'+el('regContent').innerHTML;
+  window.print();
 }
 
 // ======== DIET INDENT ========
