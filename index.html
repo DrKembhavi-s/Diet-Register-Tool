@@ -315,9 +315,15 @@ function fmtD(ds) { if (!ds) return ''; var d = new Date(ds + 'T00:00:00'); retu
 
 function fixDate(s) {
   if (!s) return today();
+  s = String(s).trim();
+  // Already yyyy-mm-dd
   if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
-  var m = s.match(/^(\d{1,2})[.\-\/](\d{1,2})[.\-\/](\d{4})$/);
-  if (m) return m[3] + '-' + m[2].padStart(2,'0') + '-' + m[1].padStart(2,'0');
+  // dd.mm.yyyy or dd/mm/yyyy or dd-mm-yyyy (4-digit year)
+  var m4 = s.match(/^(\d{1,2})[.\-\/](\d{1,2})[.\-\/](\d{4})$/);
+  if (m4) return m4[3] + '-' + m4[2].padStart(2,'0') + '-' + m4[1].padStart(2,'0');
+  // dd.mm.yy (2-digit year)
+  var m2 = s.match(/^(\d{1,2})[.\-\/](\d{1,2})[.\-\/](\d{2})$/);
+  if (m2) return '20' + m2[3] + '-' + m2[2].padStart(2,'0') + '-' + m2[1].padStart(2,'0');
   return today();
 }
 
@@ -961,12 +967,19 @@ function printMenu() {
 }
 
 window.onload = function() {
-  // Fix any patients saved with wrong date format
+  // Fix all saved patients — convert any date format to yyyy-mm-dd
+  var changed = false;
   for (var i = 0; i < patients.length; i++) {
-    patients[i].admDate = fixDate(patients[i].admDate);
-    patients[i].disDate = fixDate(patients[i].disDate);
+    var p = patients[i];
+    var a = fixDate(p.admDate);
+    var d = fixDate(p.disDate);
+    if (a !== p.admDate || d !== p.disDate) {
+      p.admDate = a;
+      p.disDate = d;
+      changed = true;
+    }
   }
-  saveAll();
+  if (changed) saveAll();
   el('dashDate').value = today();
   el('pdfFile').addEventListener('change', function() {
     if (this.files && this.files[0]) handlePdfFile(this.files[0]);
