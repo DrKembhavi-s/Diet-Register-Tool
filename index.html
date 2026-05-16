@@ -332,15 +332,14 @@ function showTab(t){
   if(t==='menu') renderMenu();
   if(t==='patients') renderPtTable();
   if(t==='register'){
-    var ads=patients.filter(function(p){return p.admitted;}).map(function(p){return p.admDate;}).sort();
-    el('regFrom').value=ads.length?ads[0]:today();
+    el('regFrom').value=today();
     el('regTo').value=today();
-    renderRegister();
+    el('regContent').innerHTML='<p style="color:#999;text-align:center;padding:20px">Select a date range above and click 🔍 View.</p>';
   }
   if(t==='indent'){
-    var ads2=patients.filter(function(p){return p.admitted;}).map(function(p){return p.admDate;}).sort();
-    el('indFrom').value=ads2.length?ads2[0]:today();
+    el('indFrom').value=today();
     el('indTo').value=today();
+    el('indContent').innerHTML='<p style="color:#999;text-align:center;padding:20px">Select a date range above and click 🔍 View.</p>';
   }
 }
 
